@@ -1,5 +1,14 @@
-https://commons.wikimedia.org/wiki/Special:Redirect/file/Mountain_lake_in_Switzerland.jpg
-https://commons.wikimedia.org/wiki/Special:Redirect/file/Orion_Nebula_-_Hubble_2006_mosaic.jpg
-https://commons.wikimedia.org/wiki/Special:Redirect/file/Tiger_close_up.jpg
-https://commons.wikimedia.org/wiki/Special:Redirect/file/SALT_WATER_CROCODILE.jpg
-https://commons.wikimedia.org/wiki/Special:Redirect/file/Pitcher_Plant_Sarracenia_Closeup_2000px.jpg
+1. https://commons.wikimedia.org/wiki/Special:Redirect/file/Mountain_lake_in_Switzerland.jpg
+Info: Viele Schweizer Bergseen werden von Schnee- und Gletscherwasser gespeist und wirken durch feinste Mineralpartikel oft intensiv blau oder türkis.
+
+2. https://commons.wikimedia.org/wiki/Special:Redirect/file/Orion_Nebula_-_Hubble_2006_mosaic.jpg
+Info: Der Orionnebel ist eine riesige Sternentstehungsregion rund 1.300 Lichtjahre entfernt – dort entstehen bis heute neue Sterne.
+
+3. https://commons.wikimedia.org/wiki/Special:Redirect/file/Tiger_close_up.jpg
+Info: Jeder Tiger besitzt ein einzigartiges Streifenmuster – ähnlich individuell wie ein menschlicher Fingerabdruck.
+
+4. https://commons.wikimedia.org/wiki/Special:Redirect/file/SALT_WATER_CROCODILE.jpg
+Info: Das Salzwasserkrokodil ist das größte heute lebende Reptil und kann bei großen Männchen mehr als 6 Meter Länge erreichen.
+
+5. https://commons.wikimedia.org/wiki/Special:Redirect/file/Pitcher_Plant_Sarracenia_Closeup_2000px.jpg
+Info: Sarracenia ist eine fleischfressende Pflanze, die Insekten in ihre schlauchförmigen Blätter lockt und daraus zusätzliche Nährstoffe gewinnt.
