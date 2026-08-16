@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#101014" />
+    <meta name="description" content="J.A.R.V.I.S TradeAnalyzer — current market research, hard-veto filtering and paper-trading signals." />
+    <title>J.A.R.V.I.S TradeAnalyzer</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="/app.js" type="module"></script>
+  </head>
+  <body>
+    <svg class="svg-sprite" aria-hidden="true">
+      <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+      <symbol id="i-scan" viewBox="0 0 24 24"><path d="M4 7V5a1 1 0 0 1 1-1h2M17 4h2a1 1 0 0 1 1 1v2M20 17v2a1 1 0 0 1-1 1h-2M7 20H5a1 1 0 0 1-1-1v-2"/><circle cx="12" cy="12" r="3"/><path d="M2 12h20"/></symbol>
+      <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V4H6.5A2.5 2.5 0 0 0 4 6.5z"/><path d="M4 6.5v13A2.5 2.5 0 0 0 6.5 22H20"/></symbol>
+      <symbol id="i-nodes" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="19" cy="18" r="2"/><path d="m10.8 6.7-4.6 9.4M13.2 6.7l4.6 9.4M7 18h10"/></symbol>
+      <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="m11 12 8-8M16 7l2 2M14 9l2 2"/></symbol>
+      <symbol id="i-command" viewBox="0 0 24 24"><path d="M9 6V5a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3v14a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3z"/></symbol>
+      <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+      <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></symbol>
+      <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 6v5h-5M4 18v-5h5"/><path d="M18.5 9A7 7 0 0 0 6 6.5L4 11M5.5 15A7 7 0 0 0 18 17.5l2-4.5"/></symbol>
+      <symbol id="i-external" viewBox="0 0 24 24"><path d="M15 3h6v6M10 14 21 3M18 13v7a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h7"/></symbol>
+      <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></symbol>
+      <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 15H6L5 6M10 11v5M14 11v5"/></symbol>
+      <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+      <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.3 3.7 2.8 17a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 3.7a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></symbol>
+      <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    </svg>
+
+    <div class="app-shell">
+      <aside class="side-rail" aria-label="Primary navigation">
+        <button class="brand-mark" data-nav="dashboard" aria-label="J.A.R.V.I.S home">
+          <span class="brand-core">J&gt;</span>
+          <span class="brand-ring">trade_analyzer</span>
+        </button>
+
+        <nav class="rail-nav">
+          <button class="rail-link active" data-nav="dashboard" data-tooltip="Dashboard" aria-label="Dashboard">
+            <span class="rail-index">01</span><span data-i18n="navHome">home</span>
+          </button>
+          <button class="rail-link" data-nav="scanner" data-tooltip="Master Scanner" aria-label="Master Scanner">
+            <span class="rail-index">02</span><span data-i18n="navScan">scan</span>
+          </button>
+          <button class="rail-link" data-nav="analyzer" data-tooltip="Asset Analyzer" aria-label="Asset Analyzer">
+            <span class="rail-index">03</span><span data-i18n="navAnalyze">analyze</span>
+          </button>
+          <button class="rail-link" data-nav="journal" data-tooltip="Journal" aria-label="Journal">
+            <span class="rail-index">04</span><span data-i18n="navJournal">journal</span>
+          </button>
+          <button class="rail-link" data-nav="sources" data-tooltip="Sources" aria-label="Sources">
+            <span class="rail-index">05</span><span data-i18n="navSources">sources</span>
+          </button>
+        </nav>
+
+        <div class="rail-bottom">
+          <span class="system-orbit" aria-label="System online"><span></span> online</span>
+          <button class="rail-link" data-open-api data-tooltip="API Vault" aria-label="Open API Vault">
+            <span class="rail-index">99</span><span>api_vault</span>
+          </button>
+        </div>
+      </aside>
+
+      <main class="main-shell">
+        <header class="topbar">
+          <div class="wordmark" data-nav="dashboard" role="button" tabindex="0">
+            <span class="wordmark-main">jarvis@trade</span>
+            <span class="wordmark-sub">:~/analyzer<span>$</span></span>
+            <span class="version">cli/2.0</span>
+          </div>
+
+          <div class="topbar-actions">
+            <button class="command-hint" data-nav="analyzer" aria-label="Open analyzer">
+              <span class="prompt-char">$</span><span data-i18n="command">Analyze asset</span><kbd>ctrl+k</kbd>
+            </button>
+            <button class="language-toggle" id="languageToggle" aria-label="Switch language">
+              <span class="active">DE</span><span>EN</span>
+            </button>
+            <button class="api-status-button" data-open-api>
+              <span class="status-led" id="apiLed"></span>
+              <span id="apiButtonLabel" data-i18n="connectApi">Connect API</span>
+            </button>
+          </div>
+        </header>
+
+        <div class="mode-strip">
+          <span class="mode-chip"><span class="mode-dot"></span><span data-i18n="paperMode">PAPER MODE</span></span>
+          <span class="mode-copy" data-i18n="modeCopy">Forward test · no real orders</span>
+          <span class="utc-clock" id="utcClock">UTC --:--:--</span>
+        </div>
+
+        <section class="view active" data-view="dashboard">
+          <div class="hero-grid">
+            <article class="hero-copy panel-reveal">
+              <div class="eyebrow"><span>[01]</span><span data-i18n="researchTerminal">GLOBAL RESEARCH TERMINAL</span></div>
+              <h1 data-i18n-html="heroTitle">markt prüfen.<br /><em>setup oder kein trade.</em></h1>
+              <p class="hero-description" data-i18n="heroDescription">Aktuelle Quellen. Feste Regeln. Keine erfundenen Live-Daten.</p>
+
+              <form class="quick-command" id="quickForm">
+                <span class="command-caret">$</span>
+                <label class="sr-only" for="quickAsset" data-i18n="assetInputLabel">Asset, ticker or contract</label>
+                <input id="quickAsset" name="asset" autocomplete="off" spellcheck="false" placeholder="BTC, NVDA, XAUUSD, 0x…" />
+                <button type="submit" class="run-button">
+                  <span data-i18n="runAnalysis">RUN ANALYSIS</span>
+                  <svg><use href="#i-arrow"></use></svg>
+                </button>
+              </form>
+
+              <div class="hero-meta">
+                <span><svg><use href="#i-shield"></use></svg><span data-i18n="hardVeto">Hard-veto enforced</span></span>
+                <span><span class="tiny-pulse"></span><span data-i18n="freshData">Fresh sources only</span></span>
+              </div>
+              <button class="master-scan-cta" type="button" data-nav="scanner"><span><small>MASTER://GLOBAL</small><strong data-i18n="scanWholeMarket">Scan the whole market</strong></span><svg><use href="#i-arrow"></use></svg></button>
+            </article>
+
+            <article class="radar-panel cli-card panel-reveal" aria-label="System status">
+              <div class="ascii-cap">+--[ system/status ]--------------------------------+</div>
+              <dl class="system-table">
+                <div><dt>engine</dt><dd>jarvis.trade_analyzer</dd></div>
+                <div><dt>mode</dt><dd>paper_forward_test</dd></div>
+                <div><dt>gate</dt><dd>score &gt;= 82</dd></div>
+                <div><dt>default</dt><dd class="warning">no_trade</dd></div>
+                <div><dt>orders</dt><dd>disabled</dd></div>
+                <div><dt>status</dt><dd class="ok"><span class="cursor-block"></span> standby</dd></div>
+              </dl>
+              <div class="ascii-cap">+--------------------------------------------------+</div>
+            </article>
+          </div>
+
+          <section class="ticker-shell panel-reveal" aria-label="Live crypto market overview">
+            <div class="ticker-title"><span data-i18n="marketPulse">MARKET PULSE</span><small id="marketTimestamp" data-i18n="awaitingFeed">AWAITING FEED</small></div>
+            <div class="ticker-track" id="marketTicker">
+              <span class="ticker-loading">CMC:// <span data-i18n="loadingMarket">loading current market data…</span></span>
+            </div>
+          </section>
+
+          <div class="metric-grid">
+            <article class="metric-card cli-card panel-reveal">
+              <div class="metric-top"><span data-i18n="globalTrend">GLOBAL TREND</span><span class="metric-icon risk"><span></span></span></div>
+              <div class="metric-value" id="globalTrendValue" data-i18n="unknown">UNKNOWN</div>
+              <div class="metric-foot"><span data-i18n="needsResearch">Requires live research</span><span>01</span></div>
+            </article>
+            <article class="metric-card cli-card panel-reveal">
+              <div class="metric-top"><span data-i18n="sourceHealth">SOURCE HEALTH</span><span class="metric-icon source"><span></span></span></div>
+              <div class="metric-value"><span id="sourceCount">1</span><small>/ 4</small></div>
+              <div class="metric-foot"><span data-i18n="coreSourcesReady">Core sources ready</span><span>02</span></div>
+            </article>
+            <article class="metric-card cli-card panel-reveal">
+              <div class="metric-top"><span data-i18n="qualityGate">QUALITY GATE</span><span class="metric-icon gate"><span></span></span></div>
+              <div class="metric-value">A / A+</div>
+              <div class="metric-foot"><span data-i18n="belowRejected">Below 82 rejected</span><span>03</span></div>
+            </article>
+            <article class="metric-card cli-card panel-reveal">
+              <div class="metric-top"><span data-i18n="executionMode">EXECUTION MODE</span><span class="metric-icon mode"><span></span></span></div>
+              <div class="metric-value accent" data-i18n="paper">PAPER</div>
+              <div class="metric-foot"><span data-i18n="realOrdersDisabled">Real orders disabled</span><span>04</span></div>
+            </article>
+          </div>
+
+          <div class="dashboard-grid">
+            <article class="signal-console cli-card panel-reveal">
+              <div class="section-head">
+                <div>
+                  <span class="section-index">02 — SIGNAL GATE</span>
+                  <h2 data-i18n="latestDecision">Latest decision</h2>
+                </div>
+                <button class="ghost-button" data-nav="analyzer"><span data-i18n="openAnalyzer">Open analyzer</span><svg><use href="#i-arrow"></use></svg></button>
+              </div>
+              <div class="empty-signal" id="dashboardSignal">
+                <div class="empty-signal-icon"><span></span><svg><use href="#i-scan"></use></svg></div>
+                <div>
+                  <span class="terminal-line">JARVIS://SIGNAL_GATE</span>
+                  <h3 data-i18n="noVerifiedSignal">No verified signal yet.</h3>
+                  <p data-i18n="connectAndRun">Connect the API and run a current analysis. Nothing shown here is fabricated.</p>
+                </div>
+              </div>
+            </article>
+
+            <article class="source-console cli-card panel-reveal">
+              <div class="section-head compact">
+                <div><span class="section-index">03 — DATA MESH</span><h2 data-i18n="sourceStatus">Source status</h2></div>
+                <span class="sync-dot"><span></span><span data-i18n="onDemand">ON DEMAND</span></span>
+              </div>
+              <div class="source-list" id="dashboardSourceList">
+                <div class="source-row" data-provider="coinmarketcap"><span class="source-logo cmc">C</span><div><strong>CoinMarketCap</strong><small data-i18n="marketData">Market + DEX data</small></div><span class="provider-state public" data-i18n="publicFeed">PUBLIC</span></div>
+                <div class="source-row" data-provider="arkham"><span class="source-logo arkham">A</span><div><strong>Arkham</strong><small data-i18n="walletIntel">Wallet intelligence</small></div><span class="provider-state search" data-i18n="webSearch">WEB SEARCH</span></div>
+                <div class="source-row" data-provider="coinalyze"><span class="source-logo coinalyze">C</span><div><strong>Coinalyze</strong><small data-i18n="derivativesData">OI + funding data</small></div><span class="provider-state optional" data-i18n="optionalKey">OPTIONAL KEY</span></div>
+                <div class="source-row" data-provider="openmarket"><span class="source-logo openmarket">O</span><div><strong>OpenMarket</strong><small data-i18n="orderflowData">Orderflow + liquidations</small></div><span class="provider-state optional" data-i18n="optionalKey">OPTIONAL KEY</span></div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="view" data-view="scanner">
+          <div class="page-heading panel-reveal">
+            <div><span class="eyebrow"><span>02</span><span data-i18n="masterScanner">MASTER SCANNER</span></span><h1 data-i18n-html="scannerTitle">scan --scope global<br /><em>filter --strict</em></h1></div>
+            <p data-i18n="scannerIntro">Candidate discovery followed by a full independent deep analysis. Only executable A/A+ paper setups reach the alert feed.</p>
+          </div>
+
+          <div class="scanner-layout">
+            <aside class="analysis-controls cli-card panel-reveal">
+              <div class="section-head compact"><div><span class="section-index">SCAN://CONFIG</span><h2 data-i18n="scanConfiguration">Scan configuration</h2></div><span class="paper-tag" data-i18n="paperOnly">PAPER ONLY</span></div>
+              <form id="scannerForm" class="analysis-form">
+                <label class="field full"><span data-i18n="marketScope">Market scope</span><select id="scanScope"><option value="GLOBAL" data-i18n="scopeGlobal">Global — all markets</option><option value="CRYPTO" data-i18n="scopeCrypto">Crypto + altcoins</option><option value="MEME" data-i18n="scopeMeme">Meme coins</option><option value="EQUITIES" data-i18n="scopeEquities">Stocks + ETFs + indices</option><option value="MACRO" data-i18n="scopeMacro">Gold + forex + macro</option></select></label>
+                <label class="field"><span data-i18n="horizon">Horizon</span><select id="scanHorizon"><option value="INTRADAY">Intraday</option><option value="SWING" selected>Swing</option><option value="POSITION">Position</option></select></label>
+                <label class="field"><span data-i18n="candidates">Candidates</span><select id="scanMax"><option value="3" selected>3</option><option value="5">5</option></select></label>
+                <label class="field full"><span data-i18n="sourceMode">Source mode</span><select id="scanSourceMode"><option value="EXTENDED" selected data-i18n="verifiedExtended">Verified extended</option><option value="CORE" data-i18n="coreOnly">Core only</option></select></label>
+                <div class="request-rules full">
+                  <div><svg><use href="#i-check"></use></svg><span data-i18n="discoverThenVerify">Discover first, verify each candidate second</span></div>
+                  <div><svg><use href="#i-check"></use></svg><span data-i18n="onlyAA">Only A/A+ enters the alert feed</span></div>
+                  <div><svg><use href="#i-check"></use></svg><span data-i18n="noForcedTrade">Empty result is valid — no forced trade</span></div>
+                  <div><svg><use href="#i-check"></use></svg><span data-i18n="paperNoOrders">Paper only — never sends an order</span></div>
+                </div>
+                <button class="run-button large full" type="submit" id="scanButton"><span data-i18n="startMasterScan">START MASTER SCAN</span><svg><use href="#i-scan"></use></svg></button>
+                <button class="ghost-button full" type="button" id="morningBriefButton"><svg><use href="#i-clock"></use></svg><span data-i18n="morningBrief">MORNING BRIEF · TOP 5</span></button>
+              </form>
+
+              <div class="monitor-console">
+                <div class="monitor-head"><div><span class="section-index">MONITOR://PAGE_OPEN</span><strong data-i18n="monitoring">Monitoring</strong></div><button class="monitor-toggle" id="monitorToggle" type="button" aria-pressed="false"><span></span></button></div>
+                <label class="field"><span data-i18n="scanInterval">Scan interval</span><select id="monitorInterval"><option value="15">15 min</option><option value="30" selected>30 min</option><option value="60">60 min</option></select></label>
+                <p data-i18n="monitorLimit">Runs only while this page stays open. True 24/7 monitoring requires a hosted worker.</p>
+                <div class="monitor-status" id="monitorStatus"><span></span><strong data-i18n="monitorOff">OFF</strong><small id="monitorNext">—</small></div>
+              </div>
+            </aside>
+
+            <section class="scanner-output cli-card panel-reveal" id="scannerOutput" aria-live="polite">
+              <div class="output-idle" id="scannerIdle">
+                <div class="idle-visual" aria-hidden="true"><pre>+------------------------------+
+ scanner: idle
+ source:  awaiting api session
+ action:  run --scope global
++------------------------------+</pre></div>
+                <span class="terminal-line">AWAITING://MASTER_SCAN</span>
+                <h2 data-i18n="scannerReady">Ready to scan.</h2>
+                <p data-i18n="scannerReadyCopy">Connect the API, select a market scope and start. Discovery candidates are never treated as signals until the full rule set passes.</p>
+              </div>
+              <div class="master-progress" id="masterProgress" hidden>
+                <div class="master-radar"><div class="radar-grid"></div><div class="radar-ring ring-one"></div><div class="radar-ring ring-two"></div><div class="radar-sweep"></div><span id="masterProgressValue">01</span></div>
+                <span class="terminal-line">MASTER_SCAN://RUNNING</span>
+                <h2 id="masterProgressTitle" data-i18n="discoveringCandidates">Discovering current candidates…</h2>
+                <div class="progress-track"><span id="masterProgressBar"></span></div>
+                <div class="master-stages" id="masterStages"><span class="active" data-i18n="discovery">Discovery</span><span data-i18n="deepChecks">Deep checks</span><span data-i18n="hardVetoFilter">Hard-veto filter</span><span data-i18n="alertGate">A/A+ gate</span></div>
+                <pre class="terminal-log" id="masterLog">$ initializing global research mesh…</pre>
+              </div>
+              <div class="scanner-results" id="scannerResults" hidden></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" data-view="analyzer">
+          <div class="page-heading panel-reveal">
+            <div><span class="eyebrow"><span>03</span><span data-i18n="liveResearch">LIVE RESEARCH</span></span><h1 data-i18n-html="analyzerTitle">analyze --asset<br /><em>verify --sources</em></h1></div>
+            <p data-i18n="analyzerIntro">One current request, multiple independent checks, one immutable paper-trade decision.</p>
+          </div>
+
+          <div class="analyzer-layout">
+            <aside class="analysis-controls cli-card panel-reveal">
+              <div class="section-head compact"><div><span class="section-index">REQUEST://NEW</span><h2 data-i18n="analysisRequest">Analysis request</h2></div><span class="paper-tag" data-i18n="paperOnly">PAPER ONLY</span></div>
+              <form id="analysisForm" class="analysis-form">
+                <label class="field full"><span data-i18n="assetContract">Asset, ticker or contract</span><input id="assetInput" name="asset" autocomplete="off" spellcheck="false" placeholder="BTC" required maxlength="96" /><small data-i18n="assetExamples">Examples: BTC, NVDA, XAUUSD or token contract</small></label>
+                <label class="field"><span data-i18n="assetClass">Asset class</span><select id="assetClass" name="assetClass"><option value="CRYPTO">Crypto</option><option value="MEME">Meme coin</option><option value="STOCK">Stock</option><option value="ETF">ETF</option><option value="INDEX">Index</option><option value="FOREX">Forex</option><option value="GOLD">Gold</option><option value="COMMODITY">Commodity</option><option value="OTHER">Other</option></select></label>
+                <label class="field" id="chainField"><span data-i18n="chain">Chain (optional)</span><select id="chainInput" name="chain"><option value="">Auto detect</option><option value="ethereum">Ethereum</option><option value="solana">Solana</option><option value="base">Base</option><option value="bsc">BNB Chain</option><option value="arbitrum">Arbitrum</option></select></label>
+                <label class="field"><span data-i18n="horizon">Horizon</span><select id="horizonInput" name="horizon"><option value="INTRADAY">Intraday</option><option value="SWING" selected>Swing</option><option value="POSITION">Position</option></select></label>
+                <label class="field"><span data-i18n="sourceMode">Source mode</span><select id="sourceMode" name="sourceMode"><option value="CORE" data-i18n="coreOnly">Core only</option><option value="EXTENDED" data-i18n="verifiedExtended">Verified extended</option></select></label>
+
+                <div class="request-rules full">
+                  <div><svg><use href="#i-check"></use></svg><span data-i18n="ruleFresh">Current sources required</span></div>
+                  <div><svg><use href="#i-check"></use></svg><span data-i18n="ruleRR">Minimum CRV 2:1</span></div>
+                  <div><svg><use href="#i-check"></use></svg><span data-i18n="ruleEtoro">eToro Germany checked</span></div>
+                  <div><svg><use href="#i-check"></use></svg><span data-i18n="ruleVeto">Hard veto cannot be overridden</span></div>
+                </div>
+
+                <button class="run-button large full" type="submit" id="analyzeButton"><span data-i18n="startLiveAnalysis">START LIVE ANALYSIS</span><svg><use href="#i-scan"></use></svg></button>
+                <button class="text-button full" type="button" data-open-api><svg><use href="#i-key"></use></svg><span data-i18n="configureKeys">Configure API keys</span></button>
+              </form>
+            </aside>
+
+            <section class="analysis-output cli-card panel-reveal" id="analysisOutput" aria-live="polite">
+              <div class="output-idle" id="analysisIdle">
+                <div class="idle-visual" aria-hidden="true"><pre>+------------------------------+
+ analyzer: idle
+ input:    ticker | contract
+ output:   verified setup
++------------------------------+</pre></div>
+                <span class="terminal-line">AWAITING://RESEARCH_REQUEST</span>
+                <h2 data-i18n="readyForAsset">Ready for an asset.</h2>
+                <p data-i18n="readyCopy">Results appear only after a fresh source check. Until then, all levels remain blank.</p>
+              </div>
+
+              <div class="scan-progress" id="scanProgress" hidden>
+                <div class="scan-visual"><div class="scan-beam"></div><span id="scanAsset">BTC</span></div>
+                <span class="terminal-line" data-i18n="researchRunning">RESEARCH://RUNNING</span>
+                <h2 id="scanTitle" data-i18n="crossChecking">Cross-checking current data…</h2>
+                <div class="progress-track"><span id="progressBar"></span></div>
+                <div class="scan-stages" id="scanStages">
+                  <span class="active" data-i18n="stageMarket">Market data</span><span data-i18n="stageDerivatives">Derivatives</span><span data-i18n="stageWallets">Wallets</span><span data-i18n="stageExecution">Execution</span><span data-i18n="stageScore">Score</span>
+                </div>
+                <pre class="terminal-log" id="terminalLog">$ initializing secure research session…</pre>
+              </div>
+
+              <div class="analysis-result" id="analysisResult" hidden></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" data-view="journal">
+          <div class="page-heading panel-reveal">
+            <div><span class="eyebrow"><span>04</span><span data-i18n="forwardTest">FORWARD TEST</span></span><h1 data-i18n-html="journalTitle">paper.log<br /><em>forward only</em></h1></div>
+            <p data-i18n="journalIntro">Only analyses generated before a move are stored. No retroactive winners.</p>
+          </div>
+
+          <div class="performance-grid panel-reveal" id="performanceGrid">
+            <article class="cli-card"><span data-i18n="closedTrades">Closed trades</span><strong id="metricClosed">0</strong><small data-i18n="verifiedOnly">verified only</small></article>
+            <article class="cli-card"><span data-i18n="winRate">Win rate</span><strong id="metricWinRate">—</strong><small>A / A+</small></article>
+            <article class="cli-card"><span data-i18n="averageR">Average R</span><strong id="metricAverageR">—</strong><small data-i18n="expectancy">expectancy</small></article>
+            <article class="cli-card"><span data-i18n="profitFactor">Profit factor</span><strong id="metricProfitFactor">—</strong><small data-i18n="grossWinLoss">gross win / loss</small></article>
+            <article class="cli-card"><span data-i18n="maxDrawdown">Max drawdown</span><strong id="metricDrawdown">—</strong><small>R</small></article>
+            <article class="cli-card"><span data-i18n="streak">W / L streak</span><strong id="metricStreak">0 / 0</strong><small data-i18n="currentSeries">current series</small></article>
+          </div>
+
+          <div class="journal-layout">
+          <article class="journal-card cli-card panel-reveal">
+            <div class="section-head">
+              <div><span class="section-index">LOCAL://RESEARCH_LOG</span><h2 data-i18n="analysisHistory">Analysis history</h2></div>
+              <div class="head-actions"><button class="ghost-button" id="exportJournal"><svg><use href="#i-download"></use></svg><span data-i18n="exportJson">Export JSON</span></button><button class="ghost-button danger" id="clearJournal"><svg><use href="#i-trash"></use></svg><span data-i18n="clear">Clear</span></button></div>
+            </div>
+            <div class="journal-summary" id="journalSummary">
+              <div><span data-i18n="storedAnalyses">Stored analyses</span><strong>0</strong></div>
+              <div><span data-i18n="aSetups">A / A+ setups</span><strong>0</strong></div>
+              <div><span data-i18n="noTradeDecisions">No-trade decisions</span><strong>0</strong></div>
+              <div><span data-i18n="realOrders">Real orders</span><strong class="safe">0</strong></div>
+            </div>
+            <div class="journal-list" id="journalList">
+              <div class="journal-empty"><svg><use href="#i-book"></use></svg><h3 data-i18n="journalEmpty">The journal is empty.</h3><p data-i18n="journalEmptyCopy">Run a live analysis to record the first immutable decision on this device.</p><button class="run-button" data-nav="analyzer"><span data-i18n="analyzeAsset">ANALYZE ASSET</span><svg><use href="#i-arrow"></use></svg></button></div>
+            </div>
+          </article>
+
+          <article class="sizer-card cli-card panel-reveal">
+            <div class="section-head compact"><div><span class="section-index">RISK://POSITION_SIZE</span><h2 data-i18n="positionSizer">Position sizing</h2></div><span class="paper-tag">CALCULATOR</span></div>
+            <form id="positionForm" class="sizer-form">
+              <label class="field"><span data-i18n="accountSize">Account size</span><input id="positionAccount" type="number" min="0" step="0.01" value="1000" /></label>
+              <label class="field"><span data-i18n="riskPercent">Max risk %</span><input id="positionRisk" type="number" min="0.01" max="100" step="0.01" value="1" /></label>
+              <label class="field"><span data-i18n="entry">Entry</span><input id="positionEntry" type="number" min="0" step="any" placeholder="100" /></label>
+              <label class="field"><span data-i18n="stop">Stop</span><input id="positionStop" type="number" min="0" step="any" placeholder="95" /></label>
+              <label class="field full"><span data-i18n="estimatedFees">Estimated round-trip fees</span><input id="positionFees" type="number" min="0" step="0.01" value="0" /></label>
+            </form>
+            <div class="sizer-output">
+              <div><span data-i18n="maxLoss">MAX LOSS</span><strong id="sizeMaxLoss">—</strong></div>
+              <div><span data-i18n="units">UNITS</span><strong id="sizeUnits">—</strong></div>
+              <div><span data-i18n="notional">NOTIONAL</span><strong id="sizeNotional">—</strong></div>
+            </div>
+            <p data-i18n="sizerWarning">Calculation does not override liquidity, leverage, spread or hard-veto rules.</p>
+          </article>
+          </div>
+        </section>
+
+        <section class="view" data-view="sources">
+          <div class="page-heading panel-reveal">
+            <div><span class="eyebrow"><span>05</span><span data-i18n="sourceArchitecture">SOURCE ARCHITECTURE</span></span><h1 data-i18n-html="sourcesTitle">Evidence before <em>opinion.</em></h1></div>
+            <p data-i18n="sourcesIntro">Core research is domain-restricted. Direct adapters add raw data when their keys are connected.</p>
+          </div>
+
+          <div class="source-grid panel-reveal">
+            <article class="source-detail cli-card"><div class="source-detail-top"><span class="source-logo cmc large">C</span><span class="tier">TIER 03 · AGGREGATOR</span></div><h2>CoinMarketCap</h2><p data-i18n="cmcDescription">Current crypto prices, market cap, volume, DEX liquidity, holders and token security data.</p><div class="capability-list"><span>PRICE</span><span>VOLUME</span><span>DEX</span><span>SECURITY</span></div><a href="https://coinmarketcap.com/api/documentation/" target="_blank" rel="noreferrer"><span data-i18n="officialDocs">Official docs</span><svg><use href="#i-external"></use></svg></a></article>
+            <article class="source-detail cli-card"><div class="source-detail-top"><span class="source-logo arkham large">A</span><span class="tier">TIER 02 · INTELLIGENCE</span></div><h2>Arkham Intelligence</h2><p data-i18n="arkhamDescription">Public entity labels, wallet activity and traceable on-chain movements for whale context.</p><div class="capability-list"><span>WALLETS</span><span>ENTITIES</span><span>FLOWS</span></div><a href="https://platform.arkhamintelligence.com/" target="_blank" rel="noreferrer"><span data-i18n="openPlatform">Open platform</span><svg><use href="#i-external"></use></svg></a></article>
+            <article class="source-detail cli-card"><div class="source-detail-top"><span class="source-logo coinalyze large">C</span><span class="tier">TIER 02 · RAW DATA</span></div><h2>Coinalyze</h2><p data-i18n="coinalyzeDescription">Open interest, current and predicted funding rates, futures markets and positioning context.</p><div class="capability-list"><span>OI</span><span>FUNDING</span><span>FUTURES</span></div><a href="https://api.coinalyze.net/v1/doc/" target="_blank" rel="noreferrer"><span data-i18n="officialDocs">Official docs</span><svg><use href="#i-external"></use></svg></a></article>
+            <article class="source-detail cli-card"><div class="source-detail-top"><span class="source-logo openmarket large">O</span><span class="tier">TIER 02 · RAW DATA</span></div><h2>OpenMarket <small>ex Kiyotaka</small></h2><p data-i18n="openmarketDescription">Candles, orderflow, liquidations, open interest, funding and heatmap-ready market points.</p><div class="capability-list"><span>ORDERFLOW</span><span>LIQUIDATIONS</span><span>HEATMAPS</span></div><a href="https://openmarket.xyz/docs/" target="_blank" rel="noreferrer"><span data-i18n="officialDocs">Official docs</span><svg><use href="#i-external"></use></svg></a></article>
+          </div>
+
+          <article class="source-policy cli-card panel-reveal">
+            <div class="policy-icon"><svg><use href="#i-shield"></use></svg></div>
+            <div><span class="section-index">POLICY://SOURCE_HIERARCHY</span><h2 data-i18n="conflictPolicy">When data conflicts, the trade pauses.</h2><p data-i18n="conflictCopy">Primary sources beat raw-data providers; raw-data providers beat aggregators; social data stays context only. Material conflicts trigger no trade.</p></div>
+            <button class="api-status-button" data-open-api><svg><use href="#i-key"></use></svg><span data-i18n="configureApi">Configure API</span></button>
+          </article>
+        </section>
+
+        <footer class="site-footer">
+          <span>J.A.R.V.I.S TRADEANALYZER // v2.0 MASTER</span>
+          <p data-i18n="disclaimer">Research tool for paper trading. No financial advice. No profit guarantees.</p>
+        </footer>
+      </main>
+
+      <nav class="mobile-nav" aria-label="Mobile navigation">
+        <button class="active" data-nav="dashboard"><svg><use href="#i-grid"></use></svg><span data-i18n="navHome">Home</span></button>
+        <button data-nav="scanner"><svg><use href="#i-scan"></use></svg><span data-i18n="navScan">Scan</span></button>
+        <button data-nav="analyzer"><svg><use href="#i-command"></use></svg><span data-i18n="navAnalyze">Analyze</span></button>
+        <button data-nav="journal"><svg><use href="#i-book"></use></svg><span data-i18n="navJournal">Journal</span></button>
+        <button data-nav="sources"><svg><use href="#i-nodes"></use></svg><span data-i18n="navSources">Sources</span></button>
+      </nav>
+    </div>
+
+    <dialog class="api-dialog" id="apiDialog">
+      <div class="dialog-shell">
+        <div class="dialog-head">
+          <div><span class="section-index">SECURE://API_VAULT</span><h2 data-i18n="apiVault">API Vault</h2><p data-i18n="apiVaultIntro">Keys are passed to the same-origin server, held only in short-lived memory and removed on disconnect or restart.</p></div>
+          <button class="icon-button" id="closeApiDialog" aria-label="Close"><svg><use href="#i-close"></use></svg></button>
+        </div>
+
+        <div class="security-notice"><svg><use href="#i-lock"></use></svg><div><strong data-i18n="securityFirst">Security first</strong><span data-i18n="securityCopy">For production, server environment secrets are recommended. Session mode is for a trusted personal device over HTTPS.</span></div></div>
+
+        <form id="apiForm" class="api-form">
+          <label class="api-field required"><span><strong>OpenAI API</strong><small data-i18n="requiredAnalysis">Required for live analysis</small></span><div class="password-wrap"><input type="password" id="openaiKey" autocomplete="off" spellcheck="false" placeholder="sk-…" /><button type="button" class="reveal-key" data-reveal="openaiKey" aria-label="Reveal key">•••</button></div></label>
+          <label class="api-field"><span><strong>CoinMarketCap</strong><small data-i18n="optionalHigherLimits">Optional · higher limits</small></span><div class="password-wrap"><input type="password" id="cmcKey" autocomplete="off" spellcheck="false" placeholder="CMC key" /><button type="button" class="reveal-key" data-reveal="cmcKey" aria-label="Reveal key">•••</button></div></label>
+          <label class="api-field"><span><strong>Coinalyze</strong><small data-i18n="optionalDerivatives">Optional · direct derivatives</small></span><div class="password-wrap"><input type="password" id="coinalyzeKey" autocomplete="off" spellcheck="false" placeholder="Coinalyze key" /><button type="button" class="reveal-key" data-reveal="coinalyzeKey" aria-label="Reveal key">•••</button></div></label>
+          <label class="api-field"><span><strong>OpenMarket</strong><small data-i18n="optionalOrderflow">Optional · orderflow and liquidations</small></span><div class="password-wrap"><input type="password" id="openmarketKey" autocomplete="off" spellcheck="false" placeholder="OpenMarket key" /><button type="button" class="reveal-key" data-reveal="openmarketKey" aria-label="Reveal key">•••</button></div></label>
+
+          <div class="connection-summary" id="connectionSummary"><span class="status-led"></span><div><strong data-i18n="notConnected">Not connected</strong><small data-i18n="noKeysStored">No keys are stored in this browser.</small></div></div>
+
+          <div class="dialog-actions">
+            <button type="button" class="ghost-button danger" id="disconnectApi" hidden><span data-i18n="disconnect">Disconnect</span></button>
+            <button type="submit" class="run-button"><span data-i18n="connectSession">CONNECT SESSION</span><svg><use href="#i-lock"></use></svg></button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+
+    <div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="true"></div>
+  </body>
+</html>

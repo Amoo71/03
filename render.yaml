@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: jarvis-tradeanalyzer
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeployTrigger: commit
+    envVars:
+      - key: SESSION_TTL_MINUTES
+        value: 30
