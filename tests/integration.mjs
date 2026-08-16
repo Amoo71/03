@@ -7,22 +7,24 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+let openRouterFailuresRemaining = 1;
 const mock = http.createServer(async (req, res) => {
-  if (req.method === "POST" && req.url === "/responses") {
+  if (req.method === "POST" && req.url?.endsWith("/chat/completions")) {
+    if (req.url.startsWith("/openrouter/") && openRouterFailuresRemaining > 0) {
+      openRouterFailuresRemaining -= 1;
+      return json(res, 429, { error: { message: "test rate limit" } });
+    }
     const body = JSON.parse(await readBody(req));
-    const name = body?.text?.format?.name;
+    const name = body?.response_format?.json_schema?.name;
     const result = name === "candidate_discovery" ? discoveryFixture() : name === "paper_trade_evaluation" ? evaluationFixture() : analysisFixture();
     return json(res, 200, {
-      id: `resp_${name}`,
-      model: "gpt-5.6",
-      output: [{
-        type: "message",
-        content: [{
-          type: "output_text",
-          text: JSON.stringify(result),
-          annotations: [{ type: "url_citation", title: "SEC filing", url: "https://www.sec.gov/Archives/test" }],
-        }],
-      }],
+      id: `chat_${name}`,
+      model: req.url.startsWith("/hf/") ? "openai/gpt-oss-120b" : "openrouter/free-test",
+      choices: [{ message: {
+        role: "assistant",
+        content: JSON.stringify(result),
+        annotations: [{ type: "url_citation", url_citation: { title: "SEC filing", url: "https://www.sec.gov/Archives/test" } }],
+      } }],
     });
   }
   if (req.url?.includes("/cryptocurrency/listings/latest")) {
@@ -45,7 +47,12 @@ const app = spawn(process.execPath, ["server.mjs"], {
   env: {
     ...process.env,
     PORT: String(appPort),
-    OPENAI_API_BASE: `http://127.0.0.1:${mockPort}`,
+    OPENROUTER_API_KEY: "openrouter-test-key",
+    HUGGINGFACE_API_KEY: "huggingface-test-key",
+    OPENROUTER_API_BASE: `http://127.0.0.1:${mockPort}/openrouter`,
+    HUGGINGFACE_API_BASE: `http://127.0.0.1:${mockPort}/hf`,
+    OPENROUTER_MODEL: "openrouter/free",
+    HUGGINGFACE_MODEL: "openai/gpt-oss-120b",
     CMC_PUBLIC_API_BASE: `http://127.0.0.1:${mockPort}`,
     CMC_PRO_API_BASE: `http://127.0.0.1:${mockPort}`,
   },
@@ -55,30 +62,30 @@ const app = spawn(process.execPath, ["server.mjs"], {
 try {
   await waitForHealth(appPort);
   const health = await api(appPort, "/api/health");
-  assert.equal(health.payload.version, "2.0.0");
+  assert.equal(health.payload.version, "2.1.0");
+  const config = await api(appPort, "/api/config");
+  assert.equal(config.payload.analyzer.ready, true);
+  assert.equal(config.payload.analyzer.primary, "openrouter");
+  assert.equal(config.payload.analyzer.fallback, "huggingface");
   const page = await fetch(`http://127.0.0.1:${appPort}/`);
   assert.equal(page.status, 200);
   assert.match(page.headers.get("content-security-policy") || "", /default-src 'self'/);
-  assert.match(await page.text(), /MASTER SCANNER/);
-
-  const session = await api(appPort, "/api/session", { method: "POST", body: { keys: { openai: "test-key" } } });
-  assert.equal(session.status, 201);
-  assert.ok(session.payload.sessionToken);
-  const headers = { "X-JARVIS-Session": session.payload.sessionToken };
+  const html = await page.text();
+  assert.match(html, /MASTER SCANNER/);
+  assert.doesNotMatch(html, /API Vault|apiDialog|type="password"|data-open-api/);
 
   const direct = await api(appPort, "/api/analyze", {
     method: "POST",
-    headers,
     body: { asset: "TEST", assetClass: "STOCK", language: "en", sourceMode: "EXTENDED", horizon: "SWING" },
   });
   assert.equal(direct.status, 200);
   assert.equal(direct.payload.analysis.verdict, "A+");
   assert.equal(direct.payload.analysis.executable, true);
   assert.equal(direct.payload.analysis.trade.rr, 2);
+  assert.equal(direct.payload.meta.provider, "huggingface", "Hugging Face must take over after the simulated OpenRouter limit");
 
   const scan = await api(appPort, "/api/scan", {
     method: "POST",
-    headers,
     body: { scope: "GLOBAL", maxCandidates: 3, language: "en", sourceMode: "EXTENDED", horizon: "SWING" },
   });
   assert.equal(scan.status, 200);
@@ -91,7 +98,7 @@ try {
     createdAt: new Date(Date.now() - 60_000).toISOString(),
     analysis: scan.payload.alerts[0].analysis,
   };
-  const evaluation = await api(appPort, "/api/evaluate", { method: "POST", headers, body: { record } });
+  const evaluation = await api(appPort, "/api/evaluate", { method: "POST", body: { record } });
   assert.equal(evaluation.status, 200);
   assert.equal(evaluation.payload.evaluation.status, "TARGET_REACHED");
   assert.equal(evaluation.payload.evaluation.rMultiple, 2);
@@ -111,13 +118,14 @@ async function validateFrontendContracts() {
   ]);
   const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]);
   assert.equal(new Set(ids).size, ids.length, "HTML ids must be unique");
-  for (const id of ["scannerForm", "scannerResults", "analysisForm", "journalList", "positionForm", "apiDialog"]) {
+  for (const id of ["scannerForm", "scannerResults", "analysisForm", "journalList", "positionForm", "engineStatus"]) {
     assert.ok(ids.includes(id), `missing #${id}`);
     assert.ok(js.includes(`#${id}`), `frontend does not bind #${id}`);
   }
   for (const view of ["dashboard", "scanner", "analyzer", "journal", "sources"]) {
     assert.ok(html.includes(`data-view="${view}"`), `missing ${view} view`);
   }
+  assert.equal((html.match(/class="mobile-icon"/g) || []).length, 5, "every mobile tab needs an icon");
   const selectorIds = [...js.matchAll(/querySelector\(["']#([A-Za-z][\w-]*)["']\)/g)].map((match) => match[1]);
   for (const id of selectorIds) assert.ok(ids.includes(id), `JavaScript binds missing #${id}`);
   const translationKeys = [...html.matchAll(/data-i18n(?:-html)?="([A-Za-z][\w]*)"/g)].map((match) => match[1]);

@@ -39,27 +39,24 @@
 
         <nav class="rail-nav">
           <button class="rail-link active" data-nav="dashboard" data-tooltip="Dashboard" aria-label="Dashboard">
-            <span class="rail-index">01</span><span data-i18n="navHome">home</span>
+            <span class="rail-icon" aria-hidden="true"><svg><use href="#i-grid"></use></svg></span><span class="rail-label"><span data-i18n="navHome">home</span><small>01</small></span>
           </button>
           <button class="rail-link" data-nav="scanner" data-tooltip="Master Scanner" aria-label="Master Scanner">
-            <span class="rail-index">02</span><span data-i18n="navScan">scan</span>
+            <span class="rail-icon" aria-hidden="true"><svg><use href="#i-scan"></use></svg></span><span class="rail-label"><span data-i18n="navScan">scan</span><small>02</small></span>
           </button>
           <button class="rail-link" data-nav="analyzer" data-tooltip="Asset Analyzer" aria-label="Asset Analyzer">
-            <span class="rail-index">03</span><span data-i18n="navAnalyze">analyze</span>
+            <span class="rail-icon" aria-hidden="true"><svg><use href="#i-command"></use></svg></span><span class="rail-label"><span data-i18n="navAnalyze">analyze</span><small>03</small></span>
           </button>
           <button class="rail-link" data-nav="journal" data-tooltip="Journal" aria-label="Journal">
-            <span class="rail-index">04</span><span data-i18n="navJournal">journal</span>
+            <span class="rail-icon" aria-hidden="true"><svg><use href="#i-book"></use></svg></span><span class="rail-label"><span data-i18n="navJournal">journal</span><small>04</small></span>
           </button>
           <button class="rail-link" data-nav="sources" data-tooltip="Sources" aria-label="Sources">
-            <span class="rail-index">05</span><span data-i18n="navSources">sources</span>
+            <span class="rail-icon" aria-hidden="true"><svg><use href="#i-nodes"></use></svg></span><span class="rail-label"><span data-i18n="navSources">sources</span><small>05</small></span>
           </button>
         </nav>
 
         <div class="rail-bottom">
-          <span class="system-orbit" aria-label="System online"><span></span> online</span>
-          <button class="rail-link" data-open-api data-tooltip="API Vault" aria-label="Open API Vault">
-            <span class="rail-index">99</span><span>api_vault</span>
-          </button>
+          <span class="system-orbit" id="railEngineStatus" aria-live="polite"><span></span><span data-i18n="engineChecking">engine_check</span></span>
         </div>
       </aside>
 
@@ -68,7 +65,7 @@
           <div class="wordmark" data-nav="dashboard" role="button" tabindex="0">
             <span class="wordmark-main">jarvis@trade</span>
             <span class="wordmark-sub">:~/analyzer<span>$</span></span>
-            <span class="version">cli/2.0</span>
+            <span class="version">cli/2.1</span>
           </div>
 
           <div class="topbar-actions">
@@ -78,10 +75,10 @@
             <button class="language-toggle" id="languageToggle" aria-label="Switch language">
               <span class="active">DE</span><span>EN</span>
             </button>
-            <button class="api-status-button" data-open-api>
-              <span class="status-led" id="apiLed"></span>
-              <span id="apiButtonLabel" data-i18n="connectApi">Connect API</span>
-            </button>
+            <span class="engine-status" id="engineStatus" aria-live="polite">
+              <span class="status-led" id="engineLed"></span>
+              <span id="engineStatusLabel" data-i18n="engineChecking">ENGINE CHECK</span>
+            </span>
           </div>
         </header>
 
@@ -173,7 +170,7 @@
                 <div>
                   <span class="terminal-line">JARVIS://SIGNAL_GATE</span>
                   <h3 data-i18n="noVerifiedSignal">No verified signal yet.</h3>
-                  <p data-i18n="connectAndRun">Connect the API and run a current analysis. Nothing shown here is fabricated.</p>
+                  <p data-i18n="connectAndRun">Start a current server-side analysis. Nothing shown here is fabricated.</p>
                 </div>
               </div>
             </article>
@@ -186,8 +183,8 @@
               <div class="source-list" id="dashboardSourceList">
                 <div class="source-row" data-provider="coinmarketcap"><span class="source-logo cmc">C</span><div><strong>CoinMarketCap</strong><small data-i18n="marketData">Market + DEX data</small></div><span class="provider-state public" data-i18n="publicFeed">PUBLIC</span></div>
                 <div class="source-row" data-provider="arkham"><span class="source-logo arkham">A</span><div><strong>Arkham</strong><small data-i18n="walletIntel">Wallet intelligence</small></div><span class="provider-state search" data-i18n="webSearch">WEB SEARCH</span></div>
-                <div class="source-row" data-provider="coinalyze"><span class="source-logo coinalyze">C</span><div><strong>Coinalyze</strong><small data-i18n="derivativesData">OI + funding data</small></div><span class="provider-state optional" data-i18n="optionalKey">OPTIONAL KEY</span></div>
-                <div class="source-row" data-provider="openmarket"><span class="source-logo openmarket">O</span><div><strong>OpenMarket</strong><small data-i18n="orderflowData">Orderflow + liquidations</small></div><span class="provider-state optional" data-i18n="optionalKey">OPTIONAL KEY</span></div>
+                <div class="source-row" data-provider="coinalyze"><span class="source-logo coinalyze">C</span><div><strong>Coinalyze</strong><small data-i18n="derivativesData">OI + funding data</small></div><span class="provider-state optional" data-i18n="serverFeed">SERVER FEED</span></div>
+                <div class="source-row" data-provider="openmarket"><span class="source-logo openmarket">O</span><div><strong>OpenMarket</strong><small data-i18n="orderflowData">Orderflow + liquidations</small></div><span class="provider-state optional" data-i18n="serverFeed">SERVER FEED</span></div>
               </div>
             </article>
           </div>
@@ -229,12 +226,12 @@
               <div class="output-idle" id="scannerIdle">
                 <div class="idle-visual" aria-hidden="true"><pre>+------------------------------+
  scanner: idle
- source:  awaiting api session
+ source:  server-side research
  action:  run --scope global
 +------------------------------+</pre></div>
                 <span class="terminal-line">AWAITING://MASTER_SCAN</span>
                 <h2 data-i18n="scannerReady">Ready to scan.</h2>
-                <p data-i18n="scannerReadyCopy">Connect the API, select a market scope and start. Discovery candidates are never treated as signals until the full rule set passes.</p>
+                <p data-i18n="scannerReadyCopy">Select a market scope and start. Discovery candidates are never treated as signals until the full rule set passes.</p>
               </div>
               <div class="master-progress" id="masterProgress" hidden>
                 <div class="master-radar"><div class="radar-grid"></div><div class="radar-ring ring-one"></div><div class="radar-ring ring-two"></div><div class="radar-sweep"></div><span id="masterProgressValue">01</span></div>
@@ -273,7 +270,6 @@
                 </div>
 
                 <button class="run-button large full" type="submit" id="analyzeButton"><span data-i18n="startLiveAnalysis">START LIVE ANALYSIS</span><svg><use href="#i-scan"></use></svg></button>
-                <button class="text-button full" type="button" data-open-api><svg><use href="#i-key"></use></svg><span data-i18n="configureKeys">Configure API keys</span></button>
               </form>
             </aside>
 
@@ -297,7 +293,7 @@
                 <div class="scan-stages" id="scanStages">
                   <span class="active" data-i18n="stageMarket">Market data</span><span data-i18n="stageDerivatives">Derivatives</span><span data-i18n="stageWallets">Wallets</span><span data-i18n="stageExecution">Execution</span><span data-i18n="stageScore">Score</span>
                 </div>
-                <pre class="terminal-log" id="terminalLog">$ initializing secure research session…</pre>
+                <pre class="terminal-log" id="terminalLog">$ starting server-side research engine…</pre>
               </div>
 
               <div class="analysis-result" id="analysisResult" hidden></div>
@@ -359,7 +355,7 @@
         <section class="view" data-view="sources">
           <div class="page-heading panel-reveal">
             <div><span class="eyebrow"><span>05</span><span data-i18n="sourceArchitecture">SOURCE ARCHITECTURE</span></span><h1 data-i18n-html="sourcesTitle">Evidence before <em>opinion.</em></h1></div>
-            <p data-i18n="sourcesIntro">Core research is domain-restricted. Direct adapters add raw data when their keys are connected.</p>
+            <p data-i18n="sourcesIntro">Core research is domain-restricted. All model and data credentials stay in protected server secrets.</p>
           </div>
 
           <div class="source-grid panel-reveal">
@@ -372,49 +368,24 @@
           <article class="source-policy cli-card panel-reveal">
             <div class="policy-icon"><svg><use href="#i-shield"></use></svg></div>
             <div><span class="section-index">POLICY://SOURCE_HIERARCHY</span><h2 data-i18n="conflictPolicy">When data conflicts, the trade pauses.</h2><p data-i18n="conflictCopy">Primary sources beat raw-data providers; raw-data providers beat aggregators; social data stays context only. Material conflicts trigger no trade.</p></div>
-            <button class="api-status-button" data-open-api><svg><use href="#i-key"></use></svg><span data-i18n="configureApi">Configure API</span></button>
+            <span class="server-secret-note"><svg><use href="#i-lock"></use></svg><span data-i18n="serverSecretsOnly">SERVER SECRETS ONLY</span></span>
           </article>
         </section>
 
         <footer class="site-footer">
-          <span>J.A.R.V.I.S TRADEANALYZER // v2.0 MASTER</span>
+          <span>J.A.R.V.I.S TRADEANALYZER // v2.1 MASTER</span>
           <p data-i18n="disclaimer">Research tool for paper trading. No financial advice. No profit guarantees.</p>
         </footer>
       </main>
 
       <nav class="mobile-nav" aria-label="Mobile navigation">
-        <button class="active" data-nav="dashboard"><svg><use href="#i-grid"></use></svg><span data-i18n="navHome">Home</span></button>
-        <button data-nav="scanner"><svg><use href="#i-scan"></use></svg><span data-i18n="navScan">Scan</span></button>
-        <button data-nav="analyzer"><svg><use href="#i-command"></use></svg><span data-i18n="navAnalyze">Analyze</span></button>
-        <button data-nav="journal"><svg><use href="#i-book"></use></svg><span data-i18n="navJournal">Journal</span></button>
-        <button data-nav="sources"><svg><use href="#i-nodes"></use></svg><span data-i18n="navSources">Sources</span></button>
+        <button class="active" data-nav="dashboard"><span class="mobile-icon"><svg><use href="#i-grid"></use></svg></span><span data-i18n="navHome">Home</span></button>
+        <button data-nav="scanner"><span class="mobile-icon"><svg><use href="#i-scan"></use></svg></span><span data-i18n="navScan">Scan</span></button>
+        <button data-nav="analyzer"><span class="mobile-icon"><svg><use href="#i-command"></use></svg></span><span data-i18n="navAnalyze">Analyze</span></button>
+        <button data-nav="journal"><span class="mobile-icon"><svg><use href="#i-book"></use></svg></span><span data-i18n="navJournal">Journal</span></button>
+        <button data-nav="sources"><span class="mobile-icon"><svg><use href="#i-nodes"></use></svg></span><span data-i18n="navSources">Sources</span></button>
       </nav>
     </div>
-
-    <dialog class="api-dialog" id="apiDialog">
-      <div class="dialog-shell">
-        <div class="dialog-head">
-          <div><span class="section-index">SECURE://API_VAULT</span><h2 data-i18n="apiVault">API Vault</h2><p data-i18n="apiVaultIntro">Keys are passed to the same-origin server, held only in short-lived memory and removed on disconnect or restart.</p></div>
-          <button class="icon-button" id="closeApiDialog" aria-label="Close"><svg><use href="#i-close"></use></svg></button>
-        </div>
-
-        <div class="security-notice"><svg><use href="#i-lock"></use></svg><div><strong data-i18n="securityFirst">Security first</strong><span data-i18n="securityCopy">For production, server environment secrets are recommended. Session mode is for a trusted personal device over HTTPS.</span></div></div>
-
-        <form id="apiForm" class="api-form">
-          <label class="api-field required"><span><strong>OpenAI API</strong><small data-i18n="requiredAnalysis">Required for live analysis</small></span><div class="password-wrap"><input type="password" id="openaiKey" autocomplete="off" spellcheck="false" placeholder="sk-…" /><button type="button" class="reveal-key" data-reveal="openaiKey" aria-label="Reveal key">•••</button></div></label>
-          <label class="api-field" data-provider-key="cmc"><span><strong>CoinMarketCap</strong><small data-i18n="optionalHigherLimits">Optional · higher limits</small></span><div class="password-wrap"><input type="password" id="cmcKey" autocomplete="off" spellcheck="false" placeholder="CMC key" /><button type="button" class="reveal-key" data-reveal="cmcKey" aria-label="Reveal key">•••</button></div></label>
-          <label class="api-field" data-provider-key="coinalyze"><span><strong>Coinalyze</strong><small data-i18n="optionalDerivatives">Optional · direct derivatives</small></span><div class="password-wrap"><input type="password" id="coinalyzeKey" autocomplete="off" spellcheck="false" placeholder="Coinalyze key" /><button type="button" class="reveal-key" data-reveal="coinalyzeKey" aria-label="Reveal key">•••</button></div></label>
-          <label class="api-field" data-provider-key="openmarket"><span><strong>OpenMarket</strong><small data-i18n="optionalOrderflow">Optional · orderflow and liquidations</small></span><div class="password-wrap"><input type="password" id="openmarketKey" autocomplete="off" spellcheck="false" placeholder="OpenMarket key" /><button type="button" class="reveal-key" data-reveal="openmarketKey" aria-label="Reveal key">•••</button></div></label>
-
-          <div class="connection-summary" id="connectionSummary"><span class="status-led"></span><div><strong data-i18n="notConnected">Not connected</strong><small data-i18n="noKeysStored">No keys are stored in this browser.</small></div></div>
-
-          <div class="dialog-actions">
-            <button type="button" class="ghost-button danger" id="disconnectApi" hidden><span data-i18n="disconnect">Disconnect</span></button>
-            <button type="submit" class="run-button"><span data-i18n="connectSession">CONNECT SESSION</span><svg><use href="#i-lock"></use></svg></button>
-          </div>
-        </form>
-      </div>
-    </dialog>
 
     <div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="true"></div>
   </body>

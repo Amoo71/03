@@ -25,7 +25,7 @@ const translations = {
     monitorOff: "AUS",
     monitorOn: "AKTIV",
     scannerReady: "Bereit zum Scannen.",
-    scannerReadyCopy: "API verbinden, Marktbereich wählen und starten. Entdeckte Kandidaten sind erst nach allen Prüfregeln Signale.",
+    scannerReadyCopy: "Marktbereich wählen und starten. Entdeckte Kandidaten sind erst nach allen Prüfregeln Signale.",
     discoveringCandidates: "Aktuelle Kandidaten werden gesucht…",
     discovery: "Entdeckung",
     deepChecks: "Deep-Checks",
@@ -40,8 +40,6 @@ const translations = {
     nextScan: "Nächster Scan",
     browserNotifications: "Browser-Benachrichtigungen wurden nicht erlaubt; In-App-Alarme bleiben aktiv.",
     navScan: "Scan",
-    connectApi: "API verbinden",
-    apiConnected: "API verbunden",
     paperMode: "PAPER-MODUS",
     modeCopy: "Forward-Test · keine echten Orders",
     researchTerminal: "GLOBAL RESEARCH TERMINAL",
@@ -72,7 +70,7 @@ const translations = {
     latestDecision: "Letzte Entscheidung",
     openAnalyzer: "Analyzer öffnen",
     noVerifiedSignal: "Noch kein verifiziertes Signal.",
-    connectAndRun: "Verbinde die API und starte eine aktuelle Analyse. Hier wird nichts erfunden.",
+    connectAndRun: "Starte eine aktuelle serverseitige Analyse. Hier wird nichts erfunden.",
     sourceStatus: "Quellenstatus",
     onDemand: "AUF ANFRAGE",
     marketData: "Markt- + DEX-Daten",
@@ -80,7 +78,8 @@ const translations = {
     walletIntel: "Wallet Intelligence",
     webSearch: "WEB-SUCHE",
     derivativesData: "OI- + Funding-Daten",
-    optionalKey: "OPTIONALER KEY",
+    optionalKey: "SERVER-FEED",
+    serverFeed: "SERVER-FEED",
     orderflowData: "Orderflow + Liquidationen",
     liveResearch: "LIVE-RECHERCHE",
     analyzerTitle: "analyze --asset<br /><em>verify --sources</em>",
@@ -100,7 +99,6 @@ const translations = {
     ruleEtoro: "eToro Deutschland geprüft",
     ruleVeto: "Hard-Veto nicht überschreibbar",
     startLiveAnalysis: "LIVE-ANALYSE STARTEN",
-    configureKeys: "API-Keys konfigurieren",
     readyForAsset: "Bereit für ein Asset.",
     readyCopy: "Ergebnisse erscheinen erst nach einer frischen Quellenprüfung. Bis dahin bleiben alle Level leer.",
     researchRunning: "RECHERCHE://LÄUFT",
@@ -125,7 +123,7 @@ const translations = {
     analyzeAsset: "ASSET ANALYSIEREN",
     sourceArchitecture: "QUELLENARCHITEKTUR",
     sourcesTitle: "sources.list<br /><em>primary first</em>",
-    sourcesIntro: "Die Kernrecherche ist auf definierte Domains beschränkt. Direkte Adapter ergänzen Rohdaten, wenn ihre Keys verbunden sind.",
+    sourcesIntro: "Die Kernrecherche ist auf definierte Domains beschränkt. Alle Modell- und Datenzugänge bleiben in geschützten Server-Secrets.",
     cmcDescription: "Aktuelle Kryptopreise, Marktkapitalisierung, Volumen, DEX-Liquidität, Holder- und Token-Sicherheitsdaten.",
     arkhamDescription: "Öffentliche Entity-Labels, Wallet-Aktivität und nachvollziehbare On-Chain-Bewegungen für Whale-Kontext.",
     coinalyzeDescription: "Open Interest, aktuelle und erwartete Funding-Raten, Futures-Märkte und Positionierungsdaten.",
@@ -134,32 +132,13 @@ const translations = {
     openPlatform: "Plattform öffnen",
     conflictPolicy: "Bei Datenkonflikten pausiert der Trade.",
     conflictCopy: "Primärquellen schlagen Rohdatenanbieter; Rohdaten schlagen Aggregatoren; Social-Daten bleiben Kontext. Wesentliche Konflikte führen zu keinem Trade.",
-    configureApi: "API konfigurieren",
     disclaimer: "Research-Tool für Paper-Trading. Keine Finanzberatung. Keine Gewinngarantie.",
     navHome: "Home",
     navAnalyze: "Analyse",
     navJournal: "Journal",
     navSources: "Quellen",
-    apiVault: "API-Tresor",
-    apiVaultIntro: "Keys gehen an den Server derselben Domain, bleiben nur kurz im Arbeitsspeicher und werden beim Trennen oder Neustart entfernt.",
-    securityFirst: "Sicherheit zuerst",
-    securityCopy: "Für Produktion empfehlen sich Server-Secrets. Der Sitzungsmodus ist nur für ein vertrauenswürdiges persönliches Gerät über HTTPS gedacht.",
-    requiredAnalysis: "Für Live-Analyse erforderlich",
-    optionalHigherLimits: "Optional · höhere Limits",
-    optionalDerivatives: "Optional · direkte Derivatedaten",
-    optionalOrderflow: "Optional · Orderflow und Liquidationen",
-    notConnected: "Nicht verbunden",
-    noKeysStored: "In diesem Browser werden keine Keys gespeichert.",
-    disconnect: "Trennen",
-    connectSession: "SITZUNG VERBINDEN",
-    managedConnection: "Server-Verbindung aktiv",
-    sessionConnected: "Sichere Sitzung verbunden",
-    sessionExpires: "Sitzung läuft automatisch ab",
     connected: "VERBUNDEN",
     unavailable: "NICHT VERFÜGBAR",
-    connectFirst: "Verbinde zuerst eine OpenAI API.",
-    connectionSuccess: "API-Sitzung sicher verbunden.",
-    disconnected: "API-Sitzung getrennt.",
     enterAsset: "Bitte Asset, Ticker oder Contract eingeben.",
     analysisFailed: "Analyse konnte nicht abgeschlossen werden.",
     noSignalCreated: "Es wurde kein Signal erstellt.",
@@ -189,8 +168,12 @@ const translations = {
     dataAsOf: "Datenstand",
     sourceConnected: "DIREKT VERBUNDEN",
     viaAiSearch: "VIA WEB-SUCHE",
-    managedByServer: "Der Server verwaltet den OpenAI-Key; im Browser ist kein Key nötig.",
-    sessionOnly: "Key nur in der kurzlebigen Serversitzung; nicht im Browser gespeichert.",
+    sourceLimited: "QUELLE BEGRENZT",
+    engineChecking: "ENGINE-PRÜFUNG",
+    engineReady: "ANALYZER BEREIT",
+    engineOffline: "ANALYZER OFFLINE",
+    engineOfflineHelp: "Der Analyzer ist serverseitig nicht konfiguriert. Füge OpenRouter oder Hugging Face als Render-Secret hinzu.",
+    serverSecretsOnly: "NUR SERVER-SECRETS",
     catalyst: "Katalysator",
     technical: "Chart + Momentum",
     derivatives: "Derivate + Flow",
@@ -251,7 +234,7 @@ const translations = {
     monitorOff: "OFF",
     monitorOn: "ACTIVE",
     scannerReady: "Ready to scan.",
-    scannerReadyCopy: "Connect the API, select a market scope and start. Discovery candidates are signals only after every rule passes.",
+    scannerReadyCopy: "Select a market scope and start. Discovery candidates are signals only after every rule passes.",
     discoveringCandidates: "Discovering current candidates…",
     discovery: "Discovery",
     deepChecks: "Deep checks",
@@ -266,8 +249,6 @@ const translations = {
     nextScan: "Next scan",
     browserNotifications: "Browser notifications were not allowed; in-app alerts remain active.",
     navScan: "Scan",
-    connectApi: "Connect API",
-    apiConnected: "API connected",
     paperMode: "PAPER MODE",
     modeCopy: "Forward test · no real orders",
     researchTerminal: "GLOBAL RESEARCH TERMINAL",
@@ -298,7 +279,7 @@ const translations = {
     latestDecision: "Latest decision",
     openAnalyzer: "Open analyzer",
     noVerifiedSignal: "No verified signal yet.",
-    connectAndRun: "Connect the API and run a current analysis. Nothing shown here is fabricated.",
+    connectAndRun: "Start a current server-side analysis. Nothing shown here is fabricated.",
     sourceStatus: "Source status",
     onDemand: "ON DEMAND",
     marketData: "Market + DEX data",
@@ -306,7 +287,8 @@ const translations = {
     walletIntel: "Wallet intelligence",
     webSearch: "WEB SEARCH",
     derivativesData: "OI + funding data",
-    optionalKey: "OPTIONAL KEY",
+    optionalKey: "SERVER FEED",
+    serverFeed: "SERVER FEED",
     orderflowData: "Orderflow + liquidations",
     liveResearch: "LIVE RESEARCH",
     analyzerTitle: "analyze --asset<br /><em>verify --sources</em>",
@@ -326,7 +308,6 @@ const translations = {
     ruleEtoro: "eToro Germany checked",
     ruleVeto: "Hard veto cannot be overridden",
     startLiveAnalysis: "START LIVE ANALYSIS",
-    configureKeys: "Configure API keys",
     readyForAsset: "Ready for an asset.",
     readyCopy: "Results appear only after a fresh source check. Until then, all levels remain blank.",
     researchRunning: "RESEARCH://RUNNING",
@@ -351,7 +332,7 @@ const translations = {
     analyzeAsset: "ANALYZE ASSET",
     sourceArchitecture: "SOURCE ARCHITECTURE",
     sourcesTitle: "sources.list<br /><em>primary first</em>",
-    sourcesIntro: "Core research is domain-restricted. Direct adapters add raw data when their keys are connected.",
+    sourcesIntro: "Core research is domain-restricted. All model and data credentials stay in protected server secrets.",
     cmcDescription: "Current crypto prices, market cap, volume, DEX liquidity, holders and token security data.",
     arkhamDescription: "Public entity labels, wallet activity and traceable on-chain movements for whale context.",
     coinalyzeDescription: "Open interest, current and predicted funding rates, futures markets and positioning context.",
@@ -360,32 +341,13 @@ const translations = {
     openPlatform: "Open platform",
     conflictPolicy: "When data conflicts, the trade pauses.",
     conflictCopy: "Primary sources beat raw-data providers; raw data beats aggregators; social stays context only. Material conflicts trigger no trade.",
-    configureApi: "Configure API",
     disclaimer: "Research tool for paper trading. No financial advice. No profit guarantees.",
     navHome: "Home",
     navAnalyze: "Analyze",
     navJournal: "Journal",
     navSources: "Sources",
-    apiVault: "API Vault",
-    apiVaultIntro: "Keys go to the same-origin server, remain only in short-lived memory and are removed on disconnect or restart.",
-    securityFirst: "Security first",
-    securityCopy: "For production, server secrets are recommended. Session mode is for a trusted personal device over HTTPS only.",
-    requiredAnalysis: "Required for live analysis",
-    optionalHigherLimits: "Optional · higher limits",
-    optionalDerivatives: "Optional · direct derivatives",
-    optionalOrderflow: "Optional · orderflow and liquidations",
-    notConnected: "Not connected",
-    noKeysStored: "No keys are stored in this browser.",
-    disconnect: "Disconnect",
-    connectSession: "CONNECT SESSION",
-    managedConnection: "Server connection active",
-    sessionConnected: "Secure session connected",
-    sessionExpires: "Session expires automatically",
     connected: "CONNECTED",
     unavailable: "UNAVAILABLE",
-    connectFirst: "Connect an OpenAI API first.",
-    connectionSuccess: "API session connected securely.",
-    disconnected: "API session disconnected.",
     enterAsset: "Enter an asset, ticker or contract.",
     analysisFailed: "Analysis could not be completed.",
     noSignalCreated: "No signal was created.",
@@ -415,8 +377,12 @@ const translations = {
     dataAsOf: "Data as of",
     sourceConnected: "DIRECT CONNECTED",
     viaAiSearch: "VIA WEB SEARCH",
-    managedByServer: "The server manages the OpenAI key; no browser key is required.",
-    sessionOnly: "Key held only in a short-lived server session; never browser-stored.",
+    sourceLimited: "SOURCE LIMITED",
+    engineChecking: "ENGINE CHECK",
+    engineReady: "ANALYZER READY",
+    engineOffline: "ANALYZER OFFLINE",
+    engineOfflineHelp: "The analyzer is not configured on the server. Add OpenRouter or Hugging Face as a Render secret.",
+    serverSecretsOnly: "SERVER SECRETS ONLY",
     catalyst: "Catalyst",
     technical: "Chart + momentum",
     derivatives: "Derivatives + flow",
@@ -455,30 +421,23 @@ const translations = {
 
 const state = {
   language: localStorage.getItem("jarvis.language") === "en" ? "en" : "de",
-  sessionToken: "",
-  sessionExpiresAt: null,
-  managedProviders: { openai: false, cmc: false, coinalyze: false, openmarket: false },
-  connectedProviders: { openai: false, cmc: false, coinalyze: false, openmarket: false },
-  pendingRun: false,
+  engine: { ready: false, primary: null, fallback: null, webResearch: false },
+  managedProviders: { cmc: false, coinalyze: false, openmarket: false },
   currentAnalysis: null,
   currentMeta: null,
   currentScan: null,
   journal: loadJournal(),
   running: false,
   scanning: false,
-  pendingScan: false,
   monitorEnabled: false,
   monitorTimer: null,
   monitorNextAt: null,
 };
 
 const elements = {
-  apiDialog: document.querySelector("#apiDialog"),
-  apiForm: document.querySelector("#apiForm"),
-  apiLed: document.querySelector("#apiLed"),
-  apiButtonLabel: document.querySelector("#apiButtonLabel"),
-  connectionSummary: document.querySelector("#connectionSummary"),
-  disconnectApi: document.querySelector("#disconnectApi"),
+  engineLed: document.querySelector("#engineLed"),
+  engineStatusLabel: document.querySelector("#engineStatusLabel"),
+  railEngineStatus: document.querySelector("#railEngineStatus"),
   languageToggle: document.querySelector("#languageToggle"),
   quickForm: document.querySelector("#quickForm"),
   quickAsset: document.querySelector("#quickAsset"),
@@ -543,14 +502,6 @@ function bindEvents() {
       navigate(nav.dataset.nav);
     }
 
-    if (event.target.closest("[data-open-api]")) {
-      event.preventDefault();
-      openApiDialog();
-    }
-
-    const reveal = event.target.closest("[data-reveal]");
-    if (reveal) toggleKeyVisibility(reveal.dataset.reveal, reveal);
-
     if (event.target.closest("[data-export-current]")) exportCurrentAnalysis();
     if (event.target.closest("[data-new-analysis]")) resetAnalysisView();
 
@@ -597,12 +548,6 @@ function bindEvents() {
   elements.positionForm.addEventListener("input", calculatePositionSize);
 
   elements.assetClass.addEventListener("change", updateChainField);
-  elements.apiForm.addEventListener("submit", connectApiSession);
-  document.querySelector("#closeApiDialog").addEventListener("click", () => elements.apiDialog.close());
-  elements.apiDialog.addEventListener("click", (event) => {
-    if (event.target === elements.apiDialog) elements.apiDialog.close();
-  });
-  elements.disconnectApi.addEventListener("click", disconnectApiSession);
   document.querySelector("#exportJournal").addEventListener("click", exportJournal);
   document.querySelector("#clearJournal").addEventListener("click", clearJournal);
 
@@ -616,7 +561,6 @@ function bindEvents() {
       navigate("analyzer");
       window.setTimeout(() => elements.assetInput.focus(), 120);
     }
-    if (event.key === "Escape" && elements.apiDialog.open) elements.apiDialog.close();
   });
 }
 
@@ -639,7 +583,7 @@ function applyLanguage() {
     if (value) node.innerHTML = value;
   });
   elements.languageToggle.querySelectorAll("span").forEach((span) => span.classList.toggle("active", span.textContent.toLowerCase() === state.language));
-  updateConnectionUI();
+  updateEngineUI();
 }
 
 function t(key) {
@@ -648,9 +592,9 @@ function t(key) {
 
 async function loadConfig() {
   const response = await apiFetch("/api/config");
-  state.managedProviders = response.managedProviders || state.managedProviders;
-  state.connectedProviders = { ...state.connectedProviders, ...state.managedProviders };
-  updateConnectionUI();
+  state.engine = { ...state.engine, ...(response.analyzer || {}) };
+  state.managedProviders = { ...state.managedProviders, ...(response.dataProviders || {}) };
+  updateEngineUI();
 }
 
 async function loadMarketOverview() {
@@ -670,88 +614,19 @@ async function loadMarketOverview() {
   }
 }
 
-function openApiDialog() {
-  updateConnectionUI();
-  if (!elements.apiDialog.open) elements.apiDialog.showModal();
-  window.setTimeout(() => {
-    if (!state.managedProviders.openai && !state.sessionToken) document.querySelector("#openaiKey").focus();
-  }, 80);
-}
-
-async function connectApiSession(event) {
-  event.preventDefault();
-  const button = elements.apiForm.querySelector("button[type='submit']");
-  const keys = {
-    openai: document.querySelector("#openaiKey").value.trim(),
-    cmc: document.querySelector("#cmcKey").value.trim(),
-    coinalyze: document.querySelector("#coinalyzeKey").value.trim(),
-    openmarket: document.querySelector("#openmarketKey").value.trim(),
-  };
-
-  if (!keys.openai && !state.managedProviders.openai) {
-    toast(t("connectFirst"), "warning");
-    document.querySelector("#openaiKey").focus();
-    return;
+function updateEngineUI() {
+  const ready = Boolean(state.engine.ready);
+  elements.engineLed.classList.toggle("ready", ready);
+  elements.engineLed.classList.toggle("offline", !ready);
+  elements.engineStatusLabel.textContent = ready ? t("engineReady") : t("engineOffline");
+  if (elements.railEngineStatus) {
+    elements.railEngineStatus.classList.toggle("ready", ready);
+    elements.railEngineStatus.classList.toggle("offline", !ready);
+    const label = elements.railEngineStatus.querySelector("span:last-child");
+    if (label) label.textContent = ready ? `${state.engine.primary || "ai"}_ready` : "engine_offline";
   }
 
-  button.disabled = true;
-  try {
-    const result = await apiFetch("/api/session", { method: "POST", body: { keys } });
-    state.sessionToken = result.sessionToken;
-    state.sessionExpiresAt = result.expiresAt;
-    state.connectedProviders = result.connectedProviders || state.connectedProviders;
-    elements.apiForm.querySelectorAll("input").forEach((input) => { input.value = ""; input.type = "password"; });
-    updateConnectionUI();
-    toast(t("connectionSuccess"));
-    window.setTimeout(() => elements.apiDialog.close(), 360);
-    if (state.pendingRun) {
-      state.pendingRun = false;
-      window.setTimeout(() => requestAnalysis(), 500);
-    }
-    if (state.pendingScan) {
-      state.pendingScan = false;
-      window.setTimeout(() => requestMasterScan(), 500);
-    }
-  } catch (error) {
-    toast(error.message, "error");
-  } finally {
-    button.disabled = false;
-    elements.apiForm.querySelectorAll("input").forEach((input) => { input.value = ""; });
-  }
-}
-
-async function disconnectApiSession() {
-  try {
-    if (state.sessionToken) await apiFetch("/api/session", { method: "DELETE" });
-  } catch {
-    // The local state is still cleared if the ephemeral server session already expired.
-  }
-  state.sessionToken = "";
-  state.sessionExpiresAt = null;
-  state.connectedProviders = { ...state.managedProviders };
-  stopMonitoring();
-  updateConnectionUI();
-  toast(t("disconnected"));
-}
-
-function updateConnectionUI() {
-  const connected = Boolean(state.sessionToken || state.managedProviders.openai);
-  elements.apiLed.classList.toggle("connected", connected);
-  elements.apiButtonLabel.textContent = connected ? t("apiConnected") : t("connectApi");
-  elements.disconnectApi.hidden = !state.sessionToken;
-
-  const summaryLed = elements.connectionSummary?.querySelector(".status-led");
-  if (summaryLed) summaryLed.classList.toggle("connected", connected);
-  const summaryStrong = elements.connectionSummary?.querySelector("strong");
-  const summarySmall = elements.connectionSummary?.querySelector("small");
-  if (summaryStrong) summaryStrong.textContent = connected ? (state.sessionToken ? t("sessionConnected") : t("managedConnection")) : t("notConnected");
-  if (summarySmall) summarySmall.textContent = connected ? (state.sessionToken ? t("sessionOnly") : t("managedByServer")) : t("noKeysStored");
-
-  document.querySelectorAll("[data-provider-key]").forEach((field) => {
-    field.hidden = Boolean(state.managedProviders[field.dataset.providerKey]);
-  });
-
-  const activeCount = 1 + (connected ? 1 : 0) + (providerConnected("coinalyze") ? 1 : 0) + (providerConnected("openmarket") ? 1 : 0);
+  const activeCount = 1 + (state.engine.webResearch ? 1 : 0) + (providerConnected("coinalyze") ? 1 : 0) + (providerConnected("openmarket") ? 1 : 0);
   elements.sourceCount.textContent = String(Math.min(4, activeCount));
 
   document.querySelectorAll(".source-row").forEach((row) => {
@@ -762,25 +637,18 @@ function updateConnectionUI() {
       badge.textContent = providerConnected("cmc") ? t("sourceConnected") : t("publicFeed");
       badge.className = `provider-state ${providerConnected("cmc") ? "connected" : "public"}`;
     } else if (provider === "arkham") {
-      badge.textContent = connected ? t("viaAiSearch") : t("webSearch");
-      badge.className = `provider-state ${connected ? "connected" : "search"}`;
+      badge.textContent = state.engine.webResearch ? t("viaAiSearch") : t("sourceLimited");
+      badge.className = `provider-state ${state.engine.webResearch ? "connected" : "optional"}`;
     } else {
       const isConnected = providerConnected(provider);
-      badge.textContent = isConnected ? t("sourceConnected") : t("optionalKey");
+      badge.textContent = isConnected ? t("sourceConnected") : t("unavailable");
       badge.className = `provider-state ${isConnected ? "connected" : "optional"}`;
     }
   });
 }
 
 function providerConnected(name) {
-  return Boolean(state.connectedProviders[name] || state.managedProviders[name]);
-}
-
-function toggleKeyVisibility(id, button) {
-  const input = document.getElementById(id);
-  if (!input) return;
-  input.type = input.type === "password" ? "text" : "password";
-  button.textContent = input.type === "password" ? "•••" : "HIDE";
+  return Boolean(state.managedProviders[name]);
 }
 
 function updateChainField() {
@@ -798,10 +666,8 @@ function autoDetectAssetClass(value) {
 
 async function requestMasterScan({ morningBrief = false, automated = false } = {}) {
   if (state.scanning) return;
-  if (!state.sessionToken && !state.managedProviders.openai) {
-    state.pendingScan = true;
-    openApiDialog();
-    if (!automated) toast(t("connectFirst"), "warning");
+  if (!state.engine.ready) {
+    if (!automated) toast(t("engineOfflineHelp"), "warning");
     return;
   }
 
@@ -970,10 +836,8 @@ async function toggleMonitoring() {
     stopMonitoring();
     return;
   }
-  if (!state.sessionToken && !state.managedProviders.openai) {
-    state.pendingScan = true;
-    openApiDialog();
-    toast(t("connectFirst"), "warning");
+  if (!state.engine.ready) {
+    toast(t("engineOfflineHelp"), "warning");
     return;
   }
   state.monitorEnabled = true;
@@ -1043,10 +907,8 @@ async function requestAnalysis() {
     elements.assetInput.focus();
     return;
   }
-  if (!state.sessionToken && !state.managedProviders.openai) {
-    state.pendingRun = true;
-    openApiDialog();
-    toast(t("connectFirst"), "warning");
+  if (!state.engine.ready) {
+    toast(t("engineOfflineHelp"), "warning");
     return;
   }
 
@@ -1101,8 +963,8 @@ function showScanProgress(asset) {
     stage.classList.remove("done");
   });
   elements.terminalLog.textContent = state.language === "de"
-    ? "$ sichere Research-Sitzung initialisiert…\n$ aktuelle Quellenrichtlinie geladen…"
-    : "$ initializing secure research session…\n$ current source policy loaded…";
+    ? "$ serverseitige Research-Engine gestartet…\n$ aktuelle Quellenrichtlinie geladen…"
+    : "$ starting server-side research engine…\n$ current source policy loaded…";
 }
 
 function createProgressController() {
@@ -1355,9 +1217,8 @@ function renderPerformanceMetrics() {
 async function evaluateRecord(id, button) {
   const record = state.journal.find((item) => item.id === id);
   if (!record || button.disabled) return;
-  if (!state.sessionToken && !state.managedProviders.openai) {
-    openApiDialog();
-    toast(t("connectFirst"), "warning");
+  if (!state.engine.ready) {
+    toast(t("engineOfflineHelp"), "warning");
     return;
   }
   button.disabled = true;
@@ -1410,7 +1271,7 @@ function clearJournal() {
 
 function exportJournal() {
   if (!state.journal.length) return toast(t("nothingToExport"), "warning");
-  downloadJson(`jarvis-paper-journal-${dateStamp()}.json`, { version: "2.0", exportedAt: new Date().toISOString(), paperTrading: true, records: state.journal });
+  downloadJson(`jarvis-paper-journal-${dateStamp()}.json`, { version: "2.1", exportedAt: new Date().toISOString(), paperTrading: true, records: state.journal });
 }
 
 function exportCurrentAnalysis() {
@@ -1434,7 +1295,6 @@ function downloadJson(filename, payload) {
 async function apiFetch(url, options = {}) {
   const headers = { Accept: "application/json", ...(options.headers || {}) };
   if (options.body !== undefined) headers["Content-Type"] = "application/json";
-  if (state.sessionToken) headers["X-JARVIS-Session"] = state.sessionToken;
   const response = await fetch(url, {
     method: options.method || "GET",
     headers,
@@ -1442,11 +1302,6 @@ async function apiFetch(url, options = {}) {
   });
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
-    if (response.status === 401 && state.sessionToken) {
-      state.sessionToken = "";
-      state.connectedProviders = { ...state.managedProviders };
-      updateConnectionUI();
-    }
     throw new Error(payload.error || `HTTP ${response.status}`);
   }
   return payload;

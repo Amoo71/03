@@ -9,8 +9,18 @@ services:
     healthCheckPath: /api/health
     autoDeployTrigger: commit
     envVars:
-      - key: SESSION_TTL_MINUTES
-        value: 30
+      - key: AI_PROVIDER
+        value: openrouter
+      - key: OPENROUTER_MODEL
+        value: openrouter/free
+      - key: OPENROUTER_WEB_SEARCH
+        value: "true"
+      - key: HUGGINGFACE_MODEL
+        value: openai/gpt-oss-120b
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: HUGGINGFACE_API_KEY
+        sync: false
       - key: CMC_API_KEY
         sync: false
       - key: COINALYZE_API_KEY

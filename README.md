@@ -1,11 +1,11 @@
-# J.A.R.V.I.S TradeAnalyzer v2.0 Master
+# J.A.R.V.I.S TradeAnalyzer v2.1 Master
 
 A responsive dark CLI-style research terminal for current multi-market discovery, conservative deep analysis and forward-test paper trading.
 
 ## Run locally
 
 1. Install Node.js 20 or newer.
-2. Copy `.env.example` to `.env` and add server-managed keys if desired.
+2. Copy `.env.example` to `.env` and add the server-managed secrets.
 3. Run `npm start`.
 4. Open `http://localhost:4173`.
 
@@ -13,22 +13,31 @@ No third-party packages are required.
 
 ## Free deployment on Render
 
-The repository includes a ready-to-use `render.yaml` Blueprint. Render is the recommended host for this build because the API Vault keeps short-lived sessions in server memory.
+The repository includes a ready-to-use `render.yaml` Blueprint. Every credential stays in Render's protected server environment; the website contains no key form, API vault or browser-side secret storage.
 
 1. Open [Render](https://dashboard.render.com/) and choose **New → Blueprint**.
 2. Connect the GitHub repository `Amoo71/03`.
-3. Render detects `render.yaml`. Enter the CoinMarketCap, Coinalyze and OpenMarket keys in Render's protected secret fields, then confirm the free web service.
+3. Render detects `render.yaml`. Enter `OPENROUTER_API_KEY` and `HUGGINGFACE_API_KEY` in the protected secret fields. Add the optional market-data keys when available.
 4. Deploy and open the generated `onrender.com` address.
-5. Use **API Vault** on the website to connect only your OpenAI key for the current session. Provider fields already configured by Render are hidden automatically.
+5. The header shows `ANALYZER READY` when at least one server-side AI provider is configured.
 
-The provider secrets use `sync: false`: values are requested securely during the first Blueprint deployment and never written to GitHub. For a server-managed OpenAI key instead, add `OPENAI_API_KEY` under **Environment** in the Render dashboard. Never commit real keys to GitHub.
+The secret entries use `sync: false`: Render requests the values during Blueprint setup and never writes them to GitHub. Never commit real keys to the repository or paste them into the website.
 
-Render's free web service can sleep after inactivity. A restart clears temporary API-Vault sessions, so reconnect the key when required. The paper-trading journal remains browser-local.
+Render's free web service can sleep after inactivity. The paper-trading journal remains browser-local.
 
-## API connection modes
+## Server-side AI providers
 
-- **Recommended production setup:** configure `OPENAI_API_KEY` and optional provider keys as server environment secrets. They never reach browser code.
-- **Personal session mode:** paste keys into the API Vault. They are sent once to the same-origin server, kept only in short-lived server memory, cleared from the form immediately and removed on disconnect, expiry or restart. Use this only on a trusted device over HTTPS.
+- `OPENROUTER_API_KEY` — preferred provider. The default model is the zero-cost `openrouter/free` router.
+- `HUGGINGFACE_API_KEY` — automatic fallback. `HF_TOKEN` is also accepted. The default model is `openai/gpt-oss-120b`.
+- `AI_PROVIDER` — optional priority override: `openrouter` (default) or `huggingface`.
+- `OPENROUTER_MODEL` / `HUGGINGFACE_MODEL` — optional model overrides.
+- `OPENROUTER_WEB_SEARCH` — `true` by default for current, domain-restricted research.
+
+If OpenRouter is rate-limited or unavailable, a request automatically retries through Hugging Face. Hugging Face fallback has no attached web-search tool and may use only the direct server data; the hard-veto layer therefore returns insufficient data instead of inventing current facts.
+
+Free provider allowances and rate limits are controlled by OpenRouter and Hugging Face and can change. OpenRouter's web-search plugin can consume separate search credits even when the selected model is free.
+
+## Optional market-data secrets
 
 Optional direct adapters:
 
@@ -36,7 +45,7 @@ Optional direct adapters:
 - `COINALYZE_API_KEY` — open interest, current/predicted funding and futures context.
 - `OPENMARKET_API_KEY` — Kiyotaka/OpenMarket orderflow, funding, liquidations and market points.
 
-Arkham public intelligence is queried through the domain-restricted OpenAI web-search step. The app does not invent a private or undocumented Arkham API.
+Arkham public intelligence is queried through the domain-restricted OpenRouter web-research step when enabled. The app does not invent a private or undocumented Arkham API.
 
 ## Master Scanner
 
@@ -72,7 +81,7 @@ Run:
 npm run check
 ```
 
-The check validates JavaScript syntax, frontend element contracts and mocked end-to-end flows for API session setup, single-asset analysis, global discovery/deep scan, A/A+ gating and paper-trade evaluation.
+The check validates JavaScript syntax, frontend element contracts, absence of browser key inputs, OpenRouter-to-Hugging-Face failover, single-asset analysis, global discovery/deep scan, A/A+ gating and paper-trade evaluation.
 
 ## Important limits
 
