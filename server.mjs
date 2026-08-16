@@ -431,7 +431,7 @@ async function routeApi(req, res, url) {
     const startedAt = Date.now();
     const providerData = await collectProviderData(input, keys, aiProviders);
     const analysis = await runAiAnalysis(input, aiProviders, providerData);
-    const enforced = enforceTradingRules(analysis.result, input, analysis.citations, providerData);
+    const enforced = enforceTradingRules(analysis.result, input, analysis.citations, providerData, analysis.webResearch);
 
     sendJson(res, 200, {
       analysis: enforced,
@@ -441,6 +441,7 @@ async function routeApi(req, res, url) {
         requestId: analysis.requestId,
         provider: analysis.provider,
         model: analysis.model,
+        webResearch: analysis.webResearch,
         generatedAt: new Date().toISOString(),
         durationMs: Date.now() - startedAt,
         paperTrading: true,
@@ -472,12 +473,12 @@ async function routeApi(req, res, url) {
       try {
         const providerData = await collectProviderData(analysisInput, keys, aiProviders);
         const analysis = await runAiAnalysis(analysisInput, aiProviders, providerData);
-        const enforced = enforceTradingRules(analysis.result, analysisInput, analysis.citations, providerData);
+        const enforced = enforceTradingRules(analysis.result, analysisInput, analysis.citations, providerData, analysis.webResearch);
         return {
           candidate,
           analysis: enforced,
           providerStatus: summarizeProviderStatus(providerData),
-          meta: { requestId: analysis.requestId, provider: analysis.provider, model: analysis.model, generatedAt: new Date().toISOString() },
+          meta: { requestId: analysis.requestId, provider: analysis.provider, model: analysis.model, webResearch: analysis.webResearch, generatedAt: new Date().toISOString() },
         };
       } catch (error) {
         return {
@@ -531,8 +532,8 @@ async function routeApi(req, res, url) {
     }
     const evaluation = await runTradeEvaluation(record, aiProviders);
     evaluation.result.sources = mergeAndSanitizeSources(
-      evaluation.result.sources,
-      evaluation.citations,
+      evaluation.webResearch ? evaluation.result.sources : [],
+      evaluation.webResearch ? evaluation.citations : [],
       [],
       record.analysis.request?.sourceMode === "CORE" ? "CORE" : "EXTENDED"
     );
@@ -543,7 +544,7 @@ async function routeApi(req, res, url) {
     }
     sendJson(res, 200, {
       evaluation: evaluation.result,
-      meta: { requestId: evaluation.requestId, provider: evaluation.provider, model: evaluation.model, generatedAt: new Date().toISOString(), paperTrading: true },
+      meta: { requestId: evaluation.requestId, provider: evaluation.provider, model: evaluation.model, webResearch: evaluation.webResearch, generatedAt: new Date().toISOString(), paperTrading: true },
     });
     return;
   }
@@ -764,10 +765,11 @@ async function requestAiProvider({ provider, allowedDomains, instructions, promp
     requestId: response.headers.get("x-request-id") || payload.id || null,
     provider: provider.id,
     model: payload.model || provider.model,
+    webResearch: provider.webSearch,
   };
 }
 
-function enforceTradingRules(result, input, annotations, providerData) {
+function enforceTradingRules(result, input, annotations, providerData, webResearch = false) {
   const safe = result && typeof result === "object" ? structuredClone(result) : {};
   safe.scoreBreakdown ||= Object.fromEntries(SCORE_KEYS.map((key) => [key, 0]));
   const computedScore = SCORE_KEYS.reduce((total, key) => {
@@ -829,11 +831,17 @@ function enforceTradingRules(result, input, annotations, providerData) {
   }
 
   const providerSources = directProviderSources(providerData);
-  safe.sources = mergeAndSanitizeSources(safe.sources, annotations, providerSources, input.sourceMode);
+  safe.sources = mergeAndSanitizeSources(
+    webResearch ? safe.sources : [],
+    webResearch ? annotations : [],
+    providerSources,
+    input.sourceMode
+  );
   safe.dataQuality ||= { freshness: "Unknown", sourcesChecked: 0, conflicts: [], limitations: [] };
   safe.dataQuality.sourcesChecked = safe.sources.length;
   safe.dataQuality.conflicts = Array.isArray(safe.dataQuality.conflicts) ? safe.dataQuality.conflicts.slice(0, 6) : [];
   safe.dataQuality.limitations = Array.isArray(safe.dataQuality.limitations) ? safe.dataQuality.limitations.slice(0, 8) : [];
+  if (!webResearch) addUnique(safe.dataQuality.limitations, "AI fallback had no live web-search verification; only direct server data was accepted.");
   if (safe.sources.length < requiredConfirmations) {
     addUnique(safe.hardVetoes, "Insufficient verifiable source coverage.");
   }

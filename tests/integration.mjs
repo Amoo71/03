@@ -74,6 +74,16 @@ try {
   assert.match(html, /MASTER SCANNER/);
   assert.doesNotMatch(html, /API Vault|apiDialog|type="password"|data-open-api/);
 
+  const fallback = await api(appPort, "/api/analyze", {
+    method: "POST",
+    body: { asset: "TEST", assetClass: "STOCK", language: "en", sourceMode: "EXTENDED", horizon: "SWING" },
+  });
+  assert.equal(fallback.status, 200);
+  assert.equal(fallback.payload.meta.provider, "huggingface", "Hugging Face must take over after the simulated OpenRouter limit");
+  assert.equal(fallback.payload.meta.webResearch, false);
+  assert.equal(fallback.payload.analysis.executable, false, "A non-browsing fallback cannot certify model-supplied sources");
+  assert.equal(fallback.payload.analysis.verdict, "INSUFFICIENT_DATA");
+
   const direct = await api(appPort, "/api/analyze", {
     method: "POST",
     body: { asset: "TEST", assetClass: "STOCK", language: "en", sourceMode: "EXTENDED", horizon: "SWING" },
@@ -82,7 +92,8 @@ try {
   assert.equal(direct.payload.analysis.verdict, "A+");
   assert.equal(direct.payload.analysis.executable, true);
   assert.equal(direct.payload.analysis.trade.rr, 2);
-  assert.equal(direct.payload.meta.provider, "huggingface", "Hugging Face must take over after the simulated OpenRouter limit");
+  assert.equal(direct.payload.meta.provider, "openrouter");
+  assert.equal(direct.payload.meta.webResearch, true);
 
   const scan = await api(appPort, "/api/scan", {
     method: "POST",
