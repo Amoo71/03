@@ -747,6 +747,10 @@ function updateConnectionUI() {
   if (summaryStrong) summaryStrong.textContent = connected ? (state.sessionToken ? t("sessionConnected") : t("managedConnection")) : t("notConnected");
   if (summarySmall) summarySmall.textContent = connected ? (state.sessionToken ? t("sessionOnly") : t("managedByServer")) : t("noKeysStored");
 
+  document.querySelectorAll("[data-provider-key]").forEach((field) => {
+    field.hidden = Boolean(state.managedProviders[field.dataset.providerKey]);
+  });
+
   const activeCount = 1 + (connected ? 1 : 0) + (providerConnected("coinalyze") ? 1 : 0) + (providerConnected("openmarket") ? 1 : 0);
   elements.sourceCount.textContent = String(Math.min(4, activeCount));
 

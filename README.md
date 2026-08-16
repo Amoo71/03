@@ -17,11 +17,11 @@ The repository includes a ready-to-use `render.yaml` Blueprint. Render is the re
 
 1. Open [Render](https://dashboard.render.com/) and choose **New → Blueprint**.
 2. Connect the GitHub repository `Amoo71/03`.
-3. Render detects `render.yaml`; confirm the free web service.
+3. Render detects `render.yaml`. Enter the CoinMarketCap, Coinalyze and OpenMarket keys in Render's protected secret fields, then confirm the free web service.
 4. Deploy and open the generated `onrender.com` address.
-5. Use **API Vault** on the website to connect your OpenAI key for the current session.
+5. Use **API Vault** on the website to connect only your OpenAI key for the current session. Provider fields already configured by Render are hidden automatically.
 
-For a server-managed key instead, add `OPENAI_API_KEY` under **Environment** in the Render dashboard. Optional provider secrets are `CMC_API_KEY`, `COINALYZE_API_KEY` and `OPENMARKET_API_KEY`. Never commit real keys to GitHub.
+The provider secrets use `sync: false`: values are requested securely during the first Blueprint deployment and never written to GitHub. For a server-managed OpenAI key instead, add `OPENAI_API_KEY` under **Environment** in the Render dashboard. Never commit real keys to GitHub.
 
 Render's free web service can sleep after inactivity. A restart clears temporary API-Vault sessions, so reconnect the key when required. The paper-trading journal remains browser-local.
 
