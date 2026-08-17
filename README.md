@@ -1,4 +1,4 @@
-# J.A.R.V.I.S TradeAnalyzer v2.2 Master
+# J.A.R.V.I.S TradeAnalyzer v2.2.1 Master
 
 A responsive dark CLI-style research terminal for current multi-market discovery, conservative deep analysis and forward-test paper trading.
 
@@ -58,6 +58,8 @@ The global scanner is deliberately two-stage:
 
 1. **Discovery:** searches current public information for a small list of candidates with genuinely independent signal types.
 2. **Deep analysis:** each candidate receives the full score matrix, fresh provider checks, eToro Germany execution check, reward/risk calculation and deterministic hard-veto enforcement.
+
+Discovery candidates are now rejected before deep analysis unless they provide fresh, source-linked and genuinely independent signal families. Price movement, volume, momentum, breakout and technical labels count as one family; market cap, rank and dominance never establish a trade candidate by themselves. The UI shows rejected discovery items separately and never renders raw model Markdown as a market result.
 
 It supports global, crypto, meme-coin, equities and macro scopes. The Morning Brief preset deep-checks up to five candidates. A result reaches the alert feed only if it is executable, scores at least 82, has sufficient independent confirmations, passes eToro checks, has a clear invalidation and has a server-recalculated reward/risk of at least 2:1.
 

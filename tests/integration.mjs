@@ -20,7 +20,7 @@ const mock = http.createServer(async (req, res) => {
     if (req.url.startsWith("/openrouter/") && Array.isArray(body.models)) openRouterModelsObserved = body.models.includes("openrouter/free-backup");
     const name = body?.response_format?.json_schema?.name;
     const prompt = body?.messages?.map((message) => message.content).join("\n") || "";
-    const result = name === "candidate_discovery" ? discoveryFixture() : name === "paper_trade_evaluation" ? evaluationFixture() : prompt.includes('"asset":"BTC-USD"') ? cryptoAnalysisFixture() : analysisFixture();
+    const result = name === "candidate_discovery" ? (prompt.includes('"scope":"CRYPTO"') ? badDiscoveryFixture() : discoveryFixture()) : name === "paper_trade_evaluation" ? evaluationFixture() : prompt.includes('"asset":"BTC-USD"') ? cryptoAnalysisFixture() : analysisFixture();
     return json(res, 200, {
       id: `chat_${name}`,
       model: req.url.startsWith("/hf/") ? "openai/gpt-oss-120b" : "openrouter/free-test",
@@ -96,7 +96,7 @@ const app = spawn(process.execPath, ["server.mjs"], {
 try {
   await waitForHealth(appPort);
   const health = await api(appPort, "/api/health");
-  assert.equal(health.payload.version, "2.2.0");
+  assert.equal(health.payload.version, "2.2.1");
   const config = await api(appPort, "/api/config");
   assert.equal(config.payload.analyzer.ready, true);
   assert.equal(config.payload.analyzer.primary, "openrouter");
@@ -151,6 +151,18 @@ try {
   assert.equal(scan.payload.analyses.length, 1);
   assert.equal(scan.payload.alerts.length, 1);
   assert.equal(scan.payload.noTrade, false);
+
+  const rejectedScan = await api(appPort, "/api/scan", {
+    method: "POST",
+    body: { scope: "CRYPTO", maxCandidates: 3, language: "de", sourceMode: "EXTENDED", horizon: "SWING" },
+  });
+  assert.equal(rejectedScan.status, 200);
+  assert.equal(rejectedScan.payload.discovery.candidates.length, 0, "price-only discovery candidates must be rejected before deep analysis");
+  assert.equal(rejectedScan.payload.discovery.rejectedCandidates.length, 3);
+  assert.equal(rejectedScan.payload.analyses.length, 0);
+  assert.equal(rejectedScan.payload.noTrade, true);
+  assert.equal(rejectedScan.payload.discovery.summary, "Kein Kandidat erfüllt aktuell die Quellen- und Konfluenzregeln. Kein Trade.");
+  assert.doesNotMatch(rejectedScan.payload.discovery.summary, /[*#\[]/, "scanner summary must be concise plain text");
 
   const record = {
     id: "test-record",
@@ -237,8 +249,32 @@ function discoveryFixture() {
     summary: "One independently confirmed test candidate.",
     candidates: [{
       asset: "TEST", assetName: "Test Corporation", assetClass: "STOCK", contract: null, chain: null,
-      directionBias: "BUY", catalyst: "Current filing", signalTypes: ["CATALYST", "VOLUME"], reasonToResearch: "Fresh catalyst and breakout.",
+      directionBias: "BUY", catalyst: "Current filing",
+      signals: [
+        { type: "CATALYST", evidence: "A current filing provides a primary event catalyst.", sourceUrl: "https://www.sec.gov/Archives/test" },
+        { type: "ETORO_EXECUTION", evidence: "The instrument page confirms venue coverage for execution research.", sourceUrl: "https://www.etoro.com/markets/test" },
+      ],
+      reasonToResearch: "Fresh catalyst and independently verified execution coverage.",
     }],
+    noSetupReason: null,
+  };
+}
+
+function badDiscoveryFixture() {
+  const priceSignal = (asset) => [{
+    type: "PRICE_VOLUME_MOMENTUM",
+    evidence: `${asset} has a positive 24-hour price change and large market capitalization.`,
+    sourceUrl: `https://coinmarketcap.com/currencies/${asset.toLowerCase()}/`,
+  }];
+  return {
+    dataAsOf: new Date().toISOString(),
+    marketTrend: "UNKNOWN",
+    summary: "**Scanning Results** ### BTC and ETH lead; HYPE is excluded but returned anyway.",
+    candidates: [
+      { asset: "BTC", assetName: "Bitcoin", assetClass: "CRYPTO", contract: null, chain: null, directionBias: "BUY", catalyst: "Market dominance", signals: priceSignal("bitcoin"), reasonToResearch: "Large market cap." },
+      { asset: "ETH", assetName: "Ethereum", assetClass: "CRYPTO", contract: null, chain: null, directionBias: "BUY", catalyst: "Relative price gain", signals: priceSignal("ethereum"), reasonToResearch: "Positive 24-hour move." },
+      { asset: "HYPE", assetName: "Hyperliquid", assetClass: "MEME", contract: null, chain: null, directionBias: "WATCH", catalyst: "Rank", signals: priceSignal("hyperliquid"), reasonToResearch: "Does not meet the meme threshold." },
+    ],
     noSetupReason: null,
   };
 }

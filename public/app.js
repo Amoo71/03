@@ -777,25 +777,33 @@ function renderScannerResults(response, announce = false) {
   const analyses = Array.isArray(response.analyses) ? response.analyses : [];
   const alerts = analyses.map((item, index) => ({ item, index })).filter(({ item }) => item.analysis?.executable && ["A", "A+"].includes(item.analysis?.verdict));
   const trend = response.discovery?.marketTrend || "UNKNOWN";
+  const trendLabel = trend === "UNKNOWN" ? (state.language === "de" ? "NICHT BESTÄTIGT" : "UNCONFIRMED") : String(trend).replaceAll("_", "-");
   const summary = response.discovery?.summary || "";
+  const rejectedCount = Number(response.meta?.rejectedCandidates) || 0;
   const noTrade = alerts.length === 0;
+  const rejectedCopy = rejectedCount
+    ? state.language === "de" ? `${rejectedCount} Discovery-Kandidat${rejectedCount === 1 ? "" : "en"} wurde${rejectedCount === 1 ? "" : "n"} vor der Tiefenanalyse verworfen.` : `${rejectedCount} discovery candidate${rejectedCount === 1 ? "" : "s"} rejected before deep analysis.`
+    : t("noAASetupCopy");
   const alertHtml = alerts.length
     ? `<section class="scan-section"><div class="scan-section-title"><span>${escapeHtml(t("executableAlerts"))}</span><strong>${alerts.length}</strong></div><div class="alert-stack">${alerts.map(({ item, index }) => renderScanCard(item, index, true)).join("")}</div></section>`
-    : `<article class="no-setup"><div class="no-setup-icon"><svg><use href="#i-shield"></use></svg></div><div><span class="terminal-line">SIGNAL_GATE://REJECTED</span><h2>${escapeHtml(t("noAASetup"))}</h2><p>${escapeHtml(t("noAASetupCopy"))}</p></div><strong>${escapeHtml(t("noTrade"))}</strong></article>`;
+    : `<article class="no-setup"><div class="no-setup-icon"><svg><use href="#i-shield"></use></svg></div><div><span class="terminal-line">SIGNAL_GATE://REJECTED</span><h2>${escapeHtml(t("noAASetup"))}</h2><p>${escapeHtml(rejectedCopy)}</p></div><strong>${escapeHtml(t("noTrade"))}</strong></article>`;
   const researched = analyses.map((item, index) => ({ item, index })).filter(({ item }) => !item.analysis?.executable);
   const candidatesHtml = researched.length
     ? researched.map(({ item, index }) => renderScanCard(item, index, false)).join("")
     : `<div class="scanner-empty-line">${escapeHtml(response.discovery?.noSetupReason || t("noAASetup"))}</div>`;
+  const researchedSection = researched.length
+    ? `<section class="scan-section"><div class="scan-section-title"><span>${escapeHtml(t("researchedCandidates"))}</span><strong>${researched.length}</strong></div><div class="candidate-stack">${candidatesHtml}</div></section>`
+    : "";
 
   elements.scannerResults.innerHTML = `
     <header class="scanner-summary ${noTrade ? "neutral" : "live"}">
-      <div><span class="terminal-line">MASTER_SCAN://COMPLETE</span><h2>${escapeHtml(String(trend).replaceAll("_", "-"))}</h2><p>${escapeHtml(summary)}</p></div>
-      <div class="scan-stats"><span><small>${escapeHtml(t("candidates"))}</small><strong>${analyses.length}</strong></span><span><small>A / A+</small><strong>${alerts.length}</strong></span><span><small>UTC</small><strong>${escapeHtml(shortUtc(response.meta?.generatedAt).replace(" UTC", ""))}</strong></span></div>
+      <div><span class="terminal-line">MASTER_SCAN://COMPLETE</span><h2>${escapeHtml(trendLabel)}</h2><p>${escapeHtml(summary)}</p></div>
+      <div class="scan-stats"><span><small>${escapeHtml(t("candidates"))}</small><strong>${analyses.length}</strong></span><span><small>REJECTED</small><strong>${rejectedCount}</strong></span><span><small>A / A+</small><strong>${alerts.length}</strong></span><span><small>UTC</small><strong>${escapeHtml(shortUtc(response.meta?.generatedAt).replace(" UTC", ""))}</strong></span></div>
     </header>
     ${alertHtml}
-    <section class="scan-section"><div class="scan-section-title"><span>${escapeHtml(t("researchedCandidates"))}</span><strong>${researched.length}</strong></div><div class="candidate-stack">${candidatesHtml}</div></section>
+    ${researchedSection}
     <footer class="scan-result-footer"><span><svg><use href="#i-shield"></use></svg>${escapeHtml(t("paperNoOrders"))}</span><span>${escapeHtml(response.meta?.durationMs ? `${Math.round(response.meta.durationMs / 1000)}s` : "—")}</span></footer>`;
-  elements.globalTrendValue.textContent = String(trend).replaceAll("_", "-");
+  elements.globalTrendValue.textContent = trendLabel;
   elements.globalTrendValue.className = `metric-value ${trend === "RISK_ON" ? "positive" : trend === "RISK_OFF" ? "negative" : ""}`;
   if (announce) toast(alerts.length ? `${alerts.length} ${t("executableAlerts")}` : t("noAASetup"), alerts.length ? "success" : "warning");
 }
