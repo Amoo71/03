@@ -4,7 +4,7 @@ const translations = {
     scanWholeMarket: "Gesamten Markt scannen",
     masterScanner: "MASTER-SCANNER",
     scannerTitle: "scan --scope global<br /><em>filter --strict</em>",
-    scannerIntro: "Kandidatensuche mit anschließender vollständiger Einzelanalyse. Nur ausführbare A-/A+-Paper-Setups erreichen den Alarm-Feed.",
+    scannerIntro: "Kandidatensuche mit vollständiger Einzelanalyse. Nur ausführbare A-/A+-Setups erreichen den Alarm-Feed; der Scanner sendet nie automatisch eine Order.",
     scanConfiguration: "Scan-Konfiguration",
     marketScope: "Marktbereich",
     scopeGlobal: "Global — alle Märkte",
@@ -16,7 +16,9 @@ const translations = {
     discoverThenVerify: "Erst entdecken, dann jeden Kandidaten prüfen",
     onlyAA: "Nur A/A+ gelangt in den Alarm-Feed",
     noForcedTrade: "Leeres Ergebnis ist gültig — kein Zwangstrade",
-    paperNoOrders: "Nur Paper — sendet niemals eine Order",
+    paperNoOrders: "Research-Scan · keine automatische Order",
+    manualExecutionOnly: "Nie automatisch — Ausführung erfordert ein separates Operator-Gate",
+    researchOnly: "RESEARCH-GATE",
     startMasterScan: "MASTER-SCAN STARTEN",
     morningBrief: "MORGEN-BRIEFING · TOP 5",
     monitoring: "Überwachung",
@@ -83,7 +85,7 @@ const translations = {
     orderflowData: "Orderflow + Liquidationen",
     liveResearch: "LIVE-RECHERCHE",
     analyzerTitle: "analyze --asset<br /><em>verify --sources</em>",
-    analyzerIntro: "Eine aktuelle Anfrage, mehrere unabhängige Prüfungen, eine unveränderliche Paper-Trade-Entscheidung.",
+    analyzerIntro: "Eine aktuelle Anfrage, mehrere unabhängige Prüfungen und nur bei vollständig bestandenem A/A+-Gate ein signiertes Ausführungsticket.",
     analysisRequest: "Analyseanfrage",
     paperOnly: "NUR PAPER",
     assetContract: "Asset, Ticker oder Contract",
@@ -132,9 +134,10 @@ const translations = {
     openPlatform: "Plattform öffnen",
     conflictPolicy: "Bei Datenkonflikten pausiert der Trade.",
     conflictCopy: "Primärquellen schlagen Rohdatenanbieter; Rohdaten schlagen Aggregatoren; Social-Daten bleiben Kontext. Wesentliche Konflikte führen zu keinem Trade.",
-    disclaimer: "Research-Tool für Paper-Trading. Keine Finanzberatung. Keine Gewinngarantie.",
+    disclaimer: "Research- und kontrolliertes Ausführungs-Tool. Keine Finanzberatung. Keine Gewinngarantie.",
     navHome: "Home",
     navAnalyze: "Analyse",
+    navExecution: "Ausführen",
     navJournal: "Journal",
     navSources: "Quellen",
     connected: "VERBUNDEN",
@@ -207,13 +210,49 @@ const translations = {
     evaluating: "WIRD AUSGEWERTET…",
     evaluationSaved: "Paper-Trade-Auswertung gespeichert.",
     outcome: "ERGEBNIS",
+    brokerExecution: "BROKER-AUSFÜHRUNG",
+    executionTitle: "execute --broker etoro<br /><em>verify --then submit</em>",
+    executionIntro: "Ein separates deterministisches Gate zwischen KI-Recherche und eToro. Kein Signal kann sich selbst ausführen.",
+    mode: "MODUS",
+    broker: "BROKER",
+    writeGate: "SCHREIB-GATE",
+    killSwitch: "KILL-SWITCH",
+    operatorAccess: "Operator-Zugang",
+    operatorLoginCopy: "Das ist das separate Operator-Passwort aus Render, kein API-Key. Die Sitzung liegt nur in einem HttpOnly-Cookie.",
+    operatorPassword: "Operator-Passwort",
+    unlockConsole: "KONSOLE ENTSPERREN",
+    operatorAuthenticated: "OPERATOR AUTHENTIFIZIERT",
+    sessionServerSide: "Geschützte Same-Site-Serversitzung",
+    reconcile: "ABGLEICHEN",
+    logout: "ABMELDEN",
+    executionCandidate: "Ausführungskandidat",
+    noExecutionSignal: "Kein ausführbares signiertes Signal.",
+    runAnalyzerForSignal: "Analyzer oder Scanner starten. Nur frische A/A+-Ergebnisse können ein kurzlebiges Ticket erzeugen.",
+    orderAmount: "Orderbetrag (USD)",
+    brokerPreview: "BROKER-PREFLIGHT STARTEN",
+    preflightCopy: "Prüft Live-Bid/Ask, Spread, Berechtigung, Kosten, Portfoliolimits und Signalfrische.",
+    armPhrase: "Freigabephrase",
+    armExecution: "SCHARFSCHALTEN",
+    orderPhrase: "Finale Orderphrase",
+    submitOrder: "ORDER SENDEN",
+    disarm: "SPERREN",
+    activateKillSwitch: "KILL-SWITCH AKTIVIEREN",
+    clearKillSwitch: "KILL-SWITCH ZURÜCKSETZEN",
+    brokerPortfolio: "Broker-Portfolio",
+    refresh: "AKTUALISIEREN",
+    loginToReconcile: "Authentifizieren und direkt mit eToro abgleichen.",
+    lastBrokerOrder: "Letzte Broker-Order",
+    checkStatus: "STATUS PRÜFEN",
+    noBrokerOrder: "In diesem Serverprozess wurde noch keine Broker-Mutation gesendet.",
+    immutableLimits: "Serverseitige Limits",
+    limitsCopy: "Browser-Eingaben können diese Werte nicht überschreiben. LIVE nutzt Hebel 1 und einmalige signierte Signaltickets.",
   },
   en: {
     command: "Analyze asset",
     scanWholeMarket: "Scan the whole market",
     masterScanner: "MASTER SCANNER",
     scannerTitle: "scan --scope global<br /><em>filter --strict</em>",
-    scannerIntro: "Candidate discovery followed by a complete independent deep analysis. Only executable A/A+ paper setups reach the alert feed.",
+    scannerIntro: "Candidate discovery followed by a complete independent deep analysis. Only executable A/A+ setups reach the alert feed; the scanner never auto-submits an order.",
     scanConfiguration: "Scan configuration",
     marketScope: "Market scope",
     scopeGlobal: "Global — all markets",
@@ -225,7 +264,9 @@ const translations = {
     discoverThenVerify: "Discover first, verify each candidate second",
     onlyAA: "Only A/A+ enters the alert feed",
     noForcedTrade: "Empty result is valid — no forced trade",
-    paperNoOrders: "Paper only — never sends an order",
+    paperNoOrders: "Research scan · no automatic order",
+    manualExecutionOnly: "Never automatic — execution requires a separate operator gate",
+    researchOnly: "RESEARCH GATE",
     startMasterScan: "START MASTER SCAN",
     morningBrief: "MORNING BRIEF · TOP 5",
     monitoring: "Monitoring",
@@ -292,7 +333,7 @@ const translations = {
     orderflowData: "Orderflow + liquidations",
     liveResearch: "LIVE RESEARCH",
     analyzerTitle: "analyze --asset<br /><em>verify --sources</em>",
-    analyzerIntro: "One current request, multiple independent checks, one immutable paper-trade decision.",
+    analyzerIntro: "One current request, multiple independent checks and a signed execution ticket only when every A/A+ rule passes.",
     analysisRequest: "Analysis request",
     paperOnly: "PAPER ONLY",
     assetContract: "Asset, ticker or contract",
@@ -341,9 +382,10 @@ const translations = {
     openPlatform: "Open platform",
     conflictPolicy: "When data conflicts, the trade pauses.",
     conflictCopy: "Primary sources beat raw-data providers; raw data beats aggregators; social stays context only. Material conflicts trigger no trade.",
-    disclaimer: "Research tool for paper trading. No financial advice. No profit guarantees.",
+    disclaimer: "Research and controlled execution tool. No financial advice. No profit guarantees.",
     navHome: "Home",
     navAnalyze: "Analyze",
+    navExecution: "Execute",
     navJournal: "Journal",
     navSources: "Sources",
     connected: "CONNECTED",
@@ -416,6 +458,42 @@ const translations = {
     evaluating: "EVALUATING…",
     evaluationSaved: "Paper-trade evaluation saved.",
     outcome: "OUTCOME",
+    brokerExecution: "BROKER EXECUTION",
+    executionTitle: "execute --broker etoro<br /><em>verify --then submit</em>",
+    executionIntro: "A separate deterministic gate between AI research and eToro. No signal can submit itself.",
+    mode: "MODE",
+    broker: "BROKER",
+    writeGate: "WRITE GATE",
+    killSwitch: "KILL SWITCH",
+    operatorAccess: "Operator access",
+    operatorLoginCopy: "This is the separate operator password from Render, not an API key. The session is stored only in an HttpOnly cookie.",
+    operatorPassword: "Operator password",
+    unlockConsole: "UNLOCK CONSOLE",
+    operatorAuthenticated: "OPERATOR AUTHENTICATED",
+    sessionServerSide: "Protected same-site server session",
+    reconcile: "RECONCILE",
+    logout: "LOG OUT",
+    executionCandidate: "Execution candidate",
+    noExecutionSignal: "No executable signed signal.",
+    runAnalyzerForSignal: "Run the analyzer or scanner. Only fresh A/A+ results can create a short-lived ticket.",
+    orderAmount: "Order amount (USD)",
+    brokerPreview: "RUN BROKER PREFLIGHT",
+    preflightCopy: "Checks live bid/ask, spread, eligibility, costs, portfolio limits and signal freshness.",
+    armPhrase: "Arm phrase",
+    armExecution: "ARM",
+    orderPhrase: "Final order phrase",
+    submitOrder: "SUBMIT ORDER",
+    disarm: "DISARM",
+    activateKillSwitch: "ACTIVATE KILL SWITCH",
+    clearKillSwitch: "RESET KILL SWITCH",
+    brokerPortfolio: "Broker portfolio",
+    refresh: "REFRESH",
+    loginToReconcile: "Authenticate and reconcile directly with eToro.",
+    lastBrokerOrder: "Last broker order",
+    checkStatus: "CHECK STATUS",
+    noBrokerOrder: "No broker mutation has been submitted in this server process.",
+    immutableLimits: "Server-enforced limits",
+    limitsCopy: "Browser edits cannot override these values. LIVE uses leverage 1 and one-time signed signal tickets.",
   },
 };
 
@@ -423,8 +501,17 @@ const state = {
   language: localStorage.getItem("jarvis.language") === "en" ? "en" : "de",
   engine: { ready: false, primary: null, fallback: null, webResearch: false },
   managedProviders: { cmc: false, coinalyze: false, openmarket: false },
+  execution: {
+    mode: "PAPER", brokerConfigured: false, operatorConfigured: false, signingConfigured: false,
+    modeConfigured: true, writesEnabled: false, liveEnabled: false, authenticated: false,
+    armed: false, armedUntil: null, killSwitch: false, executionLocked: false, lockReason: null,
+    limits: { allowedSymbols: [], maxOrderUsd: 0, maxOpenPositions: 0, maxDailyLossUsd: 0, maxSpreadPct: 0, maxEntryDeviationPct: 0, leverage: 1 },
+    reconciliation: null, lastOrder: null,
+  },
   currentAnalysis: null,
   currentMeta: null,
+  currentExecution: null,
+  executionPreview: null,
   currentScan: null,
   journal: loadJournal(),
   running: false,
@@ -476,6 +563,48 @@ const elements = {
   journalList: document.querySelector("#journalList"),
   journalSummary: document.querySelector("#journalSummary"),
   positionForm: document.querySelector("#positionForm"),
+  modeStrip: document.querySelector("#modeStrip"),
+  modeChipLabel: document.querySelector("#modeChipLabel"),
+  modeCopyLabel: document.querySelector("#modeCopyLabel"),
+  systemModeValue: document.querySelector("#systemModeValue"),
+  systemOrdersValue: document.querySelector("#systemOrdersValue"),
+  executionModeValue: document.querySelector("#executionModeValue"),
+  executionModeFoot: document.querySelector("#executionModeFoot"),
+  executionModeBanner: document.querySelector("#executionModeBanner"),
+  executionBannerCode: document.querySelector("#executionBannerCode"),
+  executionBannerTitle: document.querySelector("#executionBannerTitle"),
+  executionBannerCopy: document.querySelector("#executionBannerCopy"),
+  execModeStatus: document.querySelector("#execModeStatus"),
+  execModeDetail: document.querySelector("#execModeDetail"),
+  execBrokerStatus: document.querySelector("#execBrokerStatus"),
+  execWriteStatus: document.querySelector("#execWriteStatus"),
+  execArmStatus: document.querySelector("#execArmStatus"),
+  execKillStatus: document.querySelector("#execKillStatus"),
+  execLockReason: document.querySelector("#execLockReason"),
+  executionLoginPanel: document.querySelector("#executionLoginPanel"),
+  executionLoginForm: document.querySelector("#executionLoginForm"),
+  operatorPassword: document.querySelector("#operatorPassword"),
+  executionLoginButton: document.querySelector("#executionLoginButton"),
+  executionSessionPanel: document.querySelector("#executionSessionPanel"),
+  executionReconcileButton: document.querySelector("#executionReconcileButton"),
+  executionLogoutButton: document.querySelector("#executionLogoutButton"),
+  executionSignalBadge: document.querySelector("#executionSignalBadge"),
+  executionSignal: document.querySelector("#executionSignal"),
+  executionOrderForm: document.querySelector("#executionOrderForm"),
+  executionAmount: document.querySelector("#executionAmount"),
+  executionPreviewButton: document.querySelector("#executionPreviewButton"),
+  executionPreview: document.querySelector("#executionPreview"),
+  executionArmConfirmation: document.querySelector("#executionArmConfirmation"),
+  executionArmButton: document.querySelector("#executionArmButton"),
+  executionOrderConfirmation: document.querySelector("#executionOrderConfirmation"),
+  executionOrderButton: document.querySelector("#executionOrderButton"),
+  executionDisarmButton: document.querySelector("#executionDisarmButton"),
+  executionKillButton: document.querySelector("#executionKillButton"),
+  executionPortfolio: document.querySelector("#executionPortfolio"),
+  portfolioRefreshButton: document.querySelector("#portfolioRefreshButton"),
+  executionOrderStatusButton: document.querySelector("#executionOrderStatusButton"),
+  executionLastOrder: document.querySelector("#executionLastOrder"),
+  executionLimits: document.querySelector("#executionLimits"),
   toastRegion: document.querySelector("#toastRegion"),
 };
 
@@ -489,8 +618,8 @@ async function init() {
   renderJournal();
   calculatePositionSize();
   updateChainField();
-  await Promise.allSettled([loadConfig(), loadMarketOverview()]);
-  const initialView = ["dashboard", "scanner", "analyzer", "journal", "sources"].includes(location.hash.slice(1)) ? location.hash.slice(1) : "dashboard";
+  await Promise.allSettled([loadConfig(), loadExecutionStatus(), loadMarketOverview()]);
+  const initialView = ["dashboard", "scanner", "analyzer", "execution", "journal", "sources"].includes(location.hash.slice(1)) ? location.hash.slice(1) : "dashboard";
   navigate(initialView, false);
 }
 
@@ -510,6 +639,14 @@ function bindEvents() {
 
     const evaluate = event.target.closest("[data-evaluate-record]");
     if (evaluate) evaluateRecord(evaluate.dataset.evaluateRecord, evaluate);
+
+    if (event.target.closest("[data-prepare-execution]")) {
+      navigate("execution");
+      renderExecution();
+    }
+
+    const closePositionButton = event.target.closest("[data-close-position]");
+    if (closePositionButton) closeBrokerPosition(Number(closePositionButton.dataset.closePosition), closePositionButton);
   });
 
   elements.languageToggle.addEventListener("click", () => {
@@ -519,6 +656,7 @@ function bindEvents() {
     renderJournal();
     if (state.currentAnalysis) renderAnalysis(state.currentAnalysis, state.currentMeta, false);
     if (state.currentScan) renderScannerResults(state.currentScan, false);
+    renderExecution();
     updateMonitorUI();
     calculatePositionSize();
   });
@@ -546,6 +684,17 @@ function bindEvents() {
   elements.monitorToggle.addEventListener("click", toggleMonitoring);
   elements.monitorInterval.addEventListener("change", () => { if (state.monitorEnabled) scheduleMonitor(); });
   elements.positionForm.addEventListener("input", calculatePositionSize);
+  elements.executionLoginForm.addEventListener("submit", loginExecutionOperator);
+  elements.executionLogoutButton.addEventListener("click", logoutExecutionOperator);
+  elements.executionReconcileButton.addEventListener("click", () => reconcileExecution(elements.executionReconcileButton));
+  elements.portfolioRefreshButton.addEventListener("click", () => reconcileExecution(elements.portfolioRefreshButton));
+  elements.executionPreviewButton.addEventListener("click", previewExecutionOrder);
+  elements.executionAmount.addEventListener("input", () => { state.executionPreview = null; renderExecutionPreview(); });
+  elements.executionArmButton.addEventListener("click", armExecution);
+  elements.executionOrderForm.addEventListener("submit", submitExecutionOrder);
+  elements.executionDisarmButton.addEventListener("click", disarmExecution);
+  elements.executionKillButton.addEventListener("click", toggleExecutionKillSwitch);
+  elements.executionOrderStatusButton.addEventListener("click", refreshExecutionOrderStatus);
 
   elements.assetClass.addEventListener("change", updateChainField);
   document.querySelector("#exportJournal").addEventListener("click", exportJournal);
@@ -570,6 +719,7 @@ function navigate(view, updateHash = true) {
   if (updateHash) history.replaceState(null, "", `#${view}`);
   window.scrollTo({ top: 0, behavior: "smooth" });
   if (view === "analyzer") window.setTimeout(() => elements.assetInput.focus({ preventScroll: true }), 220);
+  if (view === "execution") loadExecutionStatus().catch(() => {});
 }
 
 function applyLanguage() {
@@ -584,6 +734,7 @@ function applyLanguage() {
   });
   elements.languageToggle.querySelectorAll("span").forEach((span) => span.classList.toggle("active", span.textContent.toLowerCase() === state.language));
   updateEngineUI();
+  renderExecution();
 }
 
 function t(key) {
@@ -595,6 +746,385 @@ async function loadConfig() {
   state.engine = { ...state.engine, ...(response.analyzer || {}) };
   state.managedProviders = { ...state.managedProviders, ...(response.dataProviders || {}) };
   updateEngineUI();
+}
+
+async function loadExecutionStatus() {
+  const status = await apiFetch("/api/execution/status");
+  applyExecutionStatus(status);
+  return status;
+}
+
+function applyExecutionStatus(status = {}) {
+  const previous = state.execution || {};
+  state.execution = {
+    ...previous,
+    ...status,
+    limits: { ...(previous.limits || {}), ...(status.limits || {}) },
+  };
+  const journalCounters = elements.journalSummary?.querySelectorAll("strong");
+  if (journalCounters?.[3]) journalCounters[3].textContent = String(state.execution.mode === "LIVE" && state.execution.lastOrder?.submitted ? 1 : 0);
+  renderExecution();
+}
+
+function renderExecution() {
+  if (!elements.executionModeBanner) return;
+  const status = state.execution || {};
+  const mode = status.mode || "PAPER";
+  const isPaper = mode === "PAPER";
+  const isDemo = mode === "DEMO_EXCHANGE";
+  const isLive = mode === "LIVE";
+  const writable = Boolean(status.writesEnabled && (!isLive || status.liveEnabled));
+  const operational = Boolean(status.modeConfigured && status.brokerConfigured && writable && !status.killSwitch && !status.executionLocked);
+  const modeLabel = isPaper ? "PAPER" : isDemo ? "DEMO EXCHANGE" : "LIVE";
+  const modeCopy = isPaper
+    ? (state.language === "de" ? "Forward-Test · keine Broker-Orders" : "Forward test · no broker orders")
+    : isDemo
+      ? (state.language === "de" ? "eToro-Demokonto · echte Broker-API, virtuelles Kapital" : "eToro demo account · real broker API, virtual capital")
+      : (state.language === "de" ? "ECHTGELD · jede Order benötigt Preflight und Bestätigung" : "REAL MONEY · every order requires preflight and confirmation");
+
+  elements.modeStrip.classList.toggle("demo", isDemo);
+  elements.modeStrip.classList.toggle("live", isLive);
+  elements.modeChipLabel.textContent = `${modeLabel} MODE`;
+  elements.modeCopyLabel.textContent = modeCopy;
+  elements.systemModeValue.textContent = isPaper ? "paper_forward_test" : isDemo ? "etoro_demo_exchange" : "etoro_live_guarded";
+  elements.systemOrdersValue.textContent = operational ? (isLive ? "live_manual_gate" : "demo_manual_gate") : "locked";
+  elements.systemOrdersValue.className = operational ? (isLive ? "danger" : "warning") : "";
+  elements.executionModeValue.textContent = modeLabel;
+  elements.executionModeValue.className = `metric-value accent ${isLive ? "danger" : isDemo ? "warning" : ""}`;
+  elements.executionModeFoot.textContent = modeCopy;
+
+  elements.executionModeBanner.className = `execution-warning panel-reveal ${isLive ? "live" : isDemo ? "demo" : ""} ${operational && !isLive ? "ready" : ""}`;
+  elements.executionBannerCode.textContent = `EXECUTION://${mode}`;
+  if (isPaper) {
+    elements.executionBannerTitle.textContent = state.language === "de" ? "Broker-Schreibzugriffe sind deaktiviert." : "Broker writes are disabled.";
+    elements.executionBannerCopy.textContent = state.language === "de" ? "Zuerst DEMO_EXCHANGE konfigurieren. LIVE benötigt einen zusätzlichen Opt-in und startet standardmäßig mit aktivem Kill-Switch." : "Configure DEMO_EXCHANGE first. LIVE requires an additional opt-in and boots with the kill switch active.";
+  } else if (isLive) {
+    elements.executionBannerTitle.textContent = operational ? (state.language === "de" ? "Live-Ausführung ist entsperrbar — Echtgeld-Risiko." : "Live execution can be armed — real money at risk.") : (state.language === "de" ? "Live-Ausführung ist gesperrt." : "Live execution is locked.");
+    elements.executionBannerCopy.textContent = status.killSwitch ? (state.language === "de" ? "Der Kill-Switch ist aktiv. Ein Reset erfordert Operator-Login, exakte Reset-Phrase und einen frischen Broker-Abgleich." : "The kill switch is active. Reset requires operator login, an exact reset phrase and fresh broker reconciliation.") : modeBlockReason(status, writable);
+  } else {
+    elements.executionBannerTitle.textContent = operational ? (state.language === "de" ? "Demo-Ausführung ist bereit." : "Demo execution is ready.") : (state.language === "de" ? "Demo-Ausführung ist noch gesperrt." : "Demo execution is still locked.");
+    elements.executionBannerCopy.textContent = modeBlockReason(status, writable);
+  }
+
+  setStatusValue(elements.execModeStatus, modeLabel, isLive ? "danger" : isDemo ? "warning" : "");
+  elements.execModeDetail.textContent = isPaper ? "research only" : isLive ? "real money" : "virtual capital";
+  setStatusValue(elements.execBrokerStatus, status.brokerConfigured ? "CONFIGURED" : "NOT CONFIGURED", status.brokerConfigured ? "ok" : "danger");
+  setStatusValue(elements.execWriteStatus, status.armed ? "ARMED" : writable ? "LOCKED" : "DISABLED", status.armed ? "danger" : writable ? "warning" : "");
+  elements.execArmStatus.textContent = status.armed && status.armedUntil ? `until ${shortUtc(status.armedUntil)}` : "not armed";
+  setStatusValue(elements.execKillStatus, status.killSwitch ? "ACTIVE" : status.executionLocked ? "LOCKED" : "CLEAR", status.killSwitch || status.executionLocked ? "danger" : "ok");
+  elements.execLockReason.textContent = status.lockReason || (status.killSwitch ? "fail closed" : "ready");
+
+  elements.executionLoginPanel.hidden = Boolean(status.authenticated);
+  elements.executionSessionPanel.hidden = !status.authenticated;
+  elements.executionReconcileButton.disabled = !status.authenticated || isPaper;
+  elements.portfolioRefreshButton.disabled = !status.authenticated || isPaper;
+  elements.executionKillButton.innerHTML = `<svg><use href="#i-alert"></use></svg><span>${escapeHtml(status.killSwitch ? t("clearKillSwitch") : t("activateKillSwitch"))}</span>`;
+  renderExecutionLimits(status.limits || {});
+  renderExecutionSignal();
+  renderExecutionPortfolio(status.reconciliation);
+  renderExecutionLastOrder(status.lastOrder);
+}
+
+function modeBlockReason(status, writable) {
+  if (!status.brokerConfigured) return state.language === "de" ? "eToro-Zugangsdaten fehlen in den Server-Secrets." : "eToro credentials are missing from server secrets.";
+  if (!status.operatorConfigured || !status.signingConfigured) return state.language === "de" ? "Operator-Zugang oder Ticketsignierung ist nicht vollständig konfiguriert." : "Operator access or ticket signing is not fully configured.";
+  if (!status.limits?.allowedSymbols?.length) return state.language === "de" ? "Die serverseitige Asset-Allowlist ist leer." : "The server-side asset allowlist is empty.";
+  if (!writable) return state.language === "de" ? "Broker-Schreibzugriffe oder der LIVE-Opt-in sind deaktiviert." : "Broker writes or the LIVE opt-in are disabled.";
+  if (status.executionLocked) return status.lockReason || (state.language === "de" ? "Broker-Abgleich erforderlich." : "Broker reconciliation required.");
+  if (status.killSwitch) return state.language === "de" ? "Kill-Switch aktiv." : "Kill switch active.";
+  return state.language === "de" ? "Vor jeder Order sind Broker-Preflight, Scharfschaltung und exakte Bestätigung erforderlich." : "Every order still requires broker preflight, arming and exact confirmation.";
+}
+
+function setStatusValue(node, value, className = "") {
+  node.textContent = value;
+  node.className = className;
+}
+
+function renderExecutionLimits(limits) {
+  const symbols = Array.isArray(limits.allowedSymbols) && limits.allowedSymbols.length ? limits.allowedSymbols.join(", ") : "—";
+  const rows = [
+    ["ALLOWLIST", symbols],
+    ["MAX ORDER", money(limits.maxOrderUsd)],
+    ["MAX STOP RISK", money(limits.maxRiskUsd)],
+    ["MAX POSITIONS", limits.maxOpenPositions ?? "—"],
+    ["DAILY LOSS", money(limits.maxDailyLossUsd)],
+    ["MAX SPREAD", finitePercent(limits.maxSpreadPct)],
+    ["ENTRY DEVIATION", finitePercent(limits.maxEntryDeviationPct)],
+    ["LEVERAGE", `${limits.leverage || 1}x`],
+  ];
+  elements.executionLimits.innerHTML = rows.map(([label, value]) => `<div><span>${escapeHtml(label)}</span><strong title="${escapeAttr(value)}">${escapeHtml(value)}</strong></div>`).join("");
+  const maxOrder = Number(limits.maxOrderUsd);
+  if (Number.isFinite(maxOrder) && maxOrder > 0) elements.executionAmount.max = String(maxOrder);
+}
+
+function renderExecutionSignal() {
+  const execution = state.currentExecution;
+  const signal = execution?.signal;
+  const active = Boolean(execution?.eligible && execution?.ticket && signal);
+  elements.executionOrderForm.hidden = !(active || (state.execution.authenticated && state.execution.mode !== "PAPER"));
+  elements.executionSignalBadge.textContent = active ? `${signal.verdict} · ${signal.score}/100` : "NONE";
+  elements.executionSignalBadge.className = `paper-tag ${active ? "safe" : ""}`;
+  elements.executionSignal.className = `execution-signal ${active ? "ready" : ""}`;
+  if (!active) {
+    const reason = execution?.reason || t("runAnalyzerForSignal");
+    elements.executionSignal.innerHTML = `<svg><use href="#i-trade"></use></svg><div><strong>${escapeHtml(t("noExecutionSignal"))}</strong><p>${escapeHtml(reason)}</p></div>`;
+    state.executionPreview = null;
+    elements.executionPreviewButton.disabled = true;
+    elements.executionArmButton.disabled = true;
+    elements.executionOrderButton.disabled = true;
+    elements.executionDisarmButton.disabled = !state.execution.authenticated || !state.execution.armed;
+    elements.executionKillButton.disabled = !state.execution.authenticated || state.execution.mode === "PAPER";
+    renderExecutionPreview();
+    return;
+  }
+  const expired = Number.isFinite(Date.parse(execution.expiresAt)) && Date.parse(execution.expiresAt) <= Date.now();
+  elements.executionSignal.innerHTML = `<svg><use href="#i-trade"></use></svg><div><strong>${escapeHtml(signal.asset)} · ${escapeHtml(signal.direction)} · ${escapeHtml(signal.verdict)}</strong><p>${escapeHtml(expired ? (state.language === "de" ? "Ticket abgelaufen — Analyse erneut starten." : "Ticket expired — run the analysis again.") : `${state.language === "de" ? "Ticket gültig bis" : "Ticket valid until"} ${shortUtc(execution.expiresAt)}`)}</p><div class="signal-spec"><span><small>TRIGGER</small><b>${escapeHtml(`${signal.triggerCondition} ${signal.trigger}`)}</b></span><span><small>ENTRY</small><b>${escapeHtml(signal.entry)}</b></span><span><small>STOP</small><b>${escapeHtml(signal.stop)}</b></span><span><small>TARGET</small><b>${escapeHtml(signal.target)}</b></span></div></div>`;
+  const modeWord = state.execution.mode === "LIVE" ? "LIVE" : "DEMO";
+  elements.executionArmConfirmation.placeholder = `ARM ${modeWord}`;
+  elements.executionOrderConfirmation.placeholder = `EXECUTE ${modeWord} ${signal.asset}`;
+  const canMutate = Boolean(state.execution.authenticated && state.execution.mode !== "PAPER" && state.execution.writesEnabled && (state.execution.mode !== "LIVE" || state.execution.liveEnabled));
+  elements.executionPreviewButton.disabled = !canMutate || expired;
+  elements.executionArmButton.disabled = !canMutate || state.execution.killSwitch || state.execution.executionLocked;
+  elements.executionDisarmButton.disabled = !state.execution.authenticated || !state.execution.armed;
+  elements.executionKillButton.disabled = !state.execution.authenticated || state.execution.mode === "PAPER";
+  renderExecutionPreview();
+}
+
+function renderExecutionPreview() {
+  const preview = state.executionPreview;
+  if (!preview) {
+    elements.executionPreview.className = "execution-preview full";
+    elements.executionPreview.innerHTML = `<span class="terminal-line">PREFLIGHT://WAITING</span><p>${escapeHtml(t("preflightCopy"))}</p>`;
+    elements.executionOrderButton.disabled = true;
+    return;
+  }
+  const ready = Boolean(preview.ready);
+  elements.executionPreview.className = `execution-preview full ${ready ? "ready" : "blocked"}`;
+  const blockers = Array.isArray(preview.blockers) ? preview.blockers : [];
+  elements.executionPreview.innerHTML = `<span class="terminal-line">PREFLIGHT://${ready ? "PASS" : "BLOCKED"}</span><div class="preflight-grid"><span><small>BID</small><strong>${escapeHtml(preview.market?.bid ?? "—")}</strong></span><span><small>ASK</small><strong>${escapeHtml(preview.market?.ask ?? "—")}</strong></span><span><small>SPREAD</small><strong>${escapeHtml(finitePercent(preview.market?.spreadPct))}</strong></span><span><small>KNOWN COSTS</small><strong>${escapeHtml(money(preview.costs?.totalKnownUsd))}</strong></span><span><small>STOP RISK EST.</small><strong>${escapeHtml(money(preview.order?.riskEstimateUsd))}</strong></span></div>${blockers.length ? `<ul class="blocker-list">${blockers.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>` : `<p>${escapeHtml(state.language === "de" ? "Alle serverseitigen Preflight-Prüfungen bestanden. Die Order ist noch nicht gesendet." : "Every server-side preflight check passed. No order has been sent yet.")}</p>`}`;
+  elements.executionOrderButton.disabled = !(ready && state.execution.authenticated && state.execution.armed && !state.execution.killSwitch && !state.execution.executionLocked);
+}
+
+function renderExecutionPortfolio(portfolio) {
+  if (!state.execution.authenticated) {
+    elements.executionPortfolio.innerHTML = `<div class="execution-empty"><span class="terminal-line">PORTFOLIO://LOCKED</span><p>${escapeHtml(t("loginToReconcile"))}</p></div>`;
+    return;
+  }
+  if (!portfolio || !Array.isArray(portfolio.positions)) {
+    elements.executionPortfolio.innerHTML = `<div class="execution-empty"><span class="terminal-line">PORTFOLIO://NOT_RECONCILED</span><p>${escapeHtml(state.language === "de" ? "Brokerstatus zuerst abgleichen." : "Reconcile broker state first.")}</p></div>`;
+    return;
+  }
+  const summary = `<div class="portfolio-summary"><div><span>CREDIT</span><strong>${escapeHtml(money(portfolio.credit))}</strong></div><div><span>UNREALIZED</span><strong>${escapeHtml(money(portfolio.unrealizedPnl))}</strong></div><div><span>OPEN</span><strong>${escapeHtml(portfolio.openPositionCount ?? portfolio.positions.length)}</strong></div><div><span>DAILY LOSS</span><strong>${escapeHtml(money(portfolio.dailyLossEstimateUsd))}</strong></div></div>`;
+  const positions = portfolio.positions.length
+    ? portfolio.positions.map((position) => `<div class="position-row"><div><span>POSITION</span><strong>#${escapeHtml(position.positionId)} · INSTRUMENT ${escapeHtml(position.instrumentId)}</strong></div><div><span>DIRECTION</span><strong>${escapeHtml(position.direction)}</strong></div><div><span>OPEN / PNL</span><strong>${escapeHtml(position.openRate ?? "—")} / ${escapeHtml(money(position.pnl))}</strong></div><div><span>SL / TP</span><strong>${escapeHtml(position.stopLossRate ?? "—")} / ${escapeHtml(position.takeProfitRate ?? "—")}</strong></div><button class="mini-action" type="button" data-close-position="${escapeAttr(position.positionId)}">${escapeHtml(state.language === "de" ? "POSITION SCHLIESSEN" : "CLOSE POSITION")}</button></div>`).join("")
+    : `<div class="execution-empty"><span class="terminal-line">PORTFOLIO://FLAT</span><p>${escapeHtml(state.language === "de" ? "Keine offenen Positionen im abgeglichenen Brokerkonto." : "No open positions in the reconciled broker account.")}</p></div>`;
+  const pending = Number(portfolio.pendingOpenOrderCount) > 0 ? `<ul class="blocker-list"><li>${escapeHtml(`${portfolio.pendingOpenOrderCount} pending open order(s)`)}</li></ul>` : "";
+  elements.executionPortfolio.innerHTML = `${summary}${pending}${positions}`;
+}
+
+function renderExecutionLastOrder(order) {
+  if (!order) {
+    elements.executionLastOrder.innerHTML = `<span class="terminal-line">ORDER://NONE</span><p>${escapeHtml(t("noBrokerOrder"))}</p>`;
+    elements.executionOrderStatusButton.disabled = true;
+    return;
+  }
+  const action = order.action || "OPEN";
+  elements.executionLastOrder.innerHTML = `<span class="terminal-line">ORDER://${escapeHtml(order.state || "UNKNOWN")}</span><div class="last-order-grid"><span><small>ACTION</small><strong>${escapeHtml(action)}</strong></span><span><small>ORDER ID</small><strong>${escapeHtml(order.orderId || "—")}</strong></span><span><small>MODE</small><strong>${escapeHtml(order.mode || state.execution.mode)}</strong></span><span><small>SUBMITTED</small><strong>${escapeHtml(shortUtc(order.submittedAt))}</strong></span></div>${order.status?.errorMessage ? `<ul class="blocker-list"><li>${escapeHtml(order.status.errorMessage)}</li></ul>` : ""}`;
+  elements.executionOrderStatusButton.disabled = !state.execution.authenticated || !order.orderId;
+}
+
+async function loginExecutionOperator(event) {
+  event.preventDefault();
+  elements.executionLoginButton.disabled = true;
+  try {
+    const status = await apiFetch("/api/execution/login", { method: "POST", body: { password: elements.operatorPassword.value } });
+    elements.operatorPassword.value = "";
+    applyExecutionStatus(status);
+    toast(state.language === "de" ? "Operator-Konsole entsperrt." : "Operator console unlocked.");
+  } catch (error) {
+    toast(error.message, "error");
+  } finally {
+    elements.executionLoginButton.disabled = false;
+  }
+}
+
+async function logoutExecutionOperator() {
+  try {
+    const status = await apiFetch("/api/execution/logout", { method: "POST", body: {} });
+    state.executionPreview = null;
+    applyExecutionStatus(status);
+    toast(state.language === "de" ? "Operator-Sitzung beendet." : "Operator session ended.");
+  } catch (error) {
+    toast(error.message, "error");
+  }
+}
+
+async function reconcileExecution(button, silent = false) {
+  if (!state.execution.authenticated) return toast(state.language === "de" ? "Operator-Anmeldung erforderlich." : "Operator login required.", "warning");
+  if (button) button.disabled = true;
+  try {
+    const response = await apiFetch("/api/execution/reconcile", { method: "POST", body: {} });
+    applyExecutionStatus(response.status);
+    state.execution.reconciliation = response.portfolio;
+    renderExecution();
+    if (!silent) toast(state.language === "de" ? "Brokerstatus abgeglichen." : "Broker state reconciled.");
+  } catch (error) {
+    if (!silent) toast(error.message, "error");
+  } finally {
+    if (button) button.disabled = false;
+  }
+}
+
+async function previewExecutionOrder() {
+  const ticket = state.currentExecution?.ticket;
+  if (!ticket) return toast(t("noExecutionSignal"), "warning");
+  elements.executionPreviewButton.disabled = true;
+  try {
+    const response = await apiFetch("/api/execution/preview", { method: "POST", body: { ticket, amountUsd: Number(elements.executionAmount.value) } });
+    state.executionPreview = response.preview;
+    applyExecutionStatus(response.status);
+    renderExecutionPreview();
+    toast(response.preview.ready ? (state.language === "de" ? "Broker-Preflight bestanden." : "Broker preflight passed.") : (state.language === "de" ? "Broker-Preflight blockiert die Order." : "Broker preflight blocked the order."), response.preview.ready ? "success" : "warning");
+  } catch (error) {
+    state.executionPreview = null;
+    renderExecutionPreview();
+    toast(executionErrorMessage(error), "error");
+  } finally {
+    renderExecutionSignal();
+  }
+}
+
+async function armExecution() {
+  elements.executionArmButton.disabled = true;
+  try {
+    const status = await apiFetch("/api/execution/arm", { method: "POST", body: { confirmation: elements.executionArmConfirmation.value } });
+    elements.executionArmConfirmation.value = "";
+    applyExecutionStatus(status);
+    toast(state.language === "de" ? "Ausführung kurzzeitig scharfgeschaltet." : "Execution armed for a short window.", "warning");
+  } catch (error) {
+    toast(executionErrorMessage(error), "error");
+  } finally {
+    renderExecutionSignal();
+  }
+}
+
+async function submitExecutionOrder(event) {
+  event.preventDefault();
+  const execution = state.currentExecution;
+  const preview = state.executionPreview;
+  if (!execution?.ticket || !preview?.ready) return toast(state.language === "de" ? "Frischer Broker-Preflight erforderlich." : "Fresh broker preflight required.", "warning");
+  if (state.execution.mode === "LIVE" && !window.confirm(state.language === "de" ? "Diese Aktion sendet eine echte Echtgeld-Order an eToro. Wirklich fortfahren?" : "This action submits a real-money order to eToro. Continue?")) return;
+  elements.executionOrderButton.disabled = true;
+  try {
+    const response = await apiFetch("/api/execution/order", { method: "POST", body: {
+      ticket: execution.ticket,
+      amountUsd: Number(elements.executionAmount.value),
+      previewId: preview.previewId,
+      confirmation: elements.executionOrderConfirmation.value,
+    } });
+    state.executionPreview = null;
+    elements.executionOrderConfirmation.value = "";
+    applyExecutionStatus(response.status);
+    state.execution.lastOrder = response.order;
+    renderExecution();
+    toast(`${state.execution.mode === "LIVE" ? "LIVE" : "DEMO"} ORDER: ${response.order.state}`, response.order.state === "FILLED" ? "success" : "warning");
+  } catch (error) {
+    toast(executionErrorMessage(error), "error");
+  } finally {
+    renderExecutionSignal();
+  }
+}
+
+async function disarmExecution() {
+  try {
+    const status = await apiFetch("/api/execution/disarm", { method: "POST", body: {} });
+    applyExecutionStatus(status);
+    toast(state.language === "de" ? "Ausführung gesperrt." : "Execution disarmed.");
+  } catch (error) {
+    toast(error.message, "error");
+  }
+}
+
+async function toggleExecutionKillSwitch() {
+  if (state.execution.killSwitch) return clearExecutionKillSwitch();
+  return activateExecutionKillSwitch();
+}
+
+async function activateExecutionKillSwitch() {
+  if (!window.confirm(state.language === "de" ? "Kill-Switch aktivieren? Neue Orders bleiben bis zu einer bewussten Server-Neukonfiguration gesperrt." : "Activate the kill switch? New orders remain blocked until an intentional server reconfiguration.")) return;
+  try {
+    const status = await apiFetch("/api/execution/kill-switch", { method: "POST", body: {} });
+    state.executionPreview = null;
+    applyExecutionStatus(status);
+    toast(state.language === "de" ? "Kill-Switch aktiv." : "Kill switch active.", "error");
+  } catch (error) {
+    toast(error.message, "error");
+  }
+}
+
+async function clearExecutionKillSwitch() {
+  const modeWord = state.execution.mode === "LIVE" ? "LIVE" : "DEMO";
+  const expected = `CLEAR ${modeWord} KILL SWITCH`;
+  const confirmation = window.prompt(`${state.language === "de" ? "Zum Zurücksetzen exakt eingeben" : "Type exactly to reset"}: ${expected}`);
+  if (confirmation === null) return;
+  try {
+    const status = await apiFetch("/api/execution/kill-switch/clear", { method: "POST", body: { confirmation } });
+    applyExecutionStatus(status);
+    toast(state.language === "de" ? "Kill-Switch nach Broker-Abgleich zurückgesetzt." : "Kill switch reset after broker reconciliation.", "warning");
+  } catch (error) {
+    toast(executionErrorMessage(error), "error");
+  }
+}
+
+async function refreshExecutionOrderStatus() {
+  const order = state.execution.lastOrder;
+  if (!order?.orderId) return;
+  elements.executionOrderStatusButton.disabled = true;
+  try {
+    const response = await apiFetch("/api/execution/order-status", { method: "POST", body: { orderId: order.orderId, referenceId: order.referenceId, action: order.action || "OPEN" } });
+    applyExecutionStatus(response.status);
+    renderExecution();
+    toast(state.language === "de" ? "Orderstatus aktualisiert." : "Order status refreshed.");
+  } catch (error) {
+    toast(executionErrorMessage(error), "error");
+  } finally {
+    renderExecutionLastOrder(state.execution.lastOrder);
+  }
+}
+
+async function closeBrokerPosition(positionId, button) {
+  const expected = `CLOSE POSITION ${positionId}`;
+  const confirmation = window.prompt(`${state.language === "de" ? "Zum vollständigen Schließen exakt eingeben" : "Type exactly to close the full position"}: ${expected}`);
+  if (confirmation === null) return;
+  button.disabled = true;
+  try {
+    const response = await apiFetch("/api/execution/close-position", { method: "POST", body: { positionId, confirmation } });
+    applyExecutionStatus(response.status);
+    state.execution.lastOrder = response.order;
+    renderExecution();
+    toast(`${state.language === "de" ? "Close-Order" : "Close order"}: ${response.order.state}`, response.order.state === "CLOSED" ? "success" : "warning");
+    if (response.order.state === "CLOSED") await reconcileExecution(null, true);
+  } catch (error) {
+    toast(executionErrorMessage(error), "error");
+  } finally {
+    button.disabled = false;
+  }
+}
+
+function executionErrorMessage(error) {
+  const blockers = Array.isArray(error.details?.blockers) ? error.details.blockers.join(" · ") : "";
+  return blockers ? `${error.message} ${blockers}` : error.message;
+}
+
+function money(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return "—";
+  return new Intl.NumberFormat(state.language === "de" ? "de-DE" : "en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 }).format(number);
+}
+
+function finitePercent(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? `${number.toFixed(Math.abs(number) < 1 ? 3 : 2)}%` : "—";
 }
 
 async function loadMarketOverview() {
@@ -693,7 +1223,7 @@ async function requestMasterScan({ morningBrief = false, automated = false } = {
     state.currentScan = response;
     renderScannerResults(response, true);
     for (const item of response.analyses || []) {
-      if (item.analysis) storeAnalysis(item.analysis, { ...(item.meta || {}), source: morningBrief ? "MORNING_BRIEF" : "MASTER_SCAN" });
+      if (item.analysis) storeAnalysis(item.analysis, { ...(response.meta || {}), ...(item.meta || {}), source: morningBrief ? "MORNING_BRIEF" : "MASTER_SCAN" });
     }
     notifyAlerts(response.alerts || []);
   } catch (error) {
@@ -863,7 +1393,9 @@ function openScanAnalysis(index) {
   const item = state.currentScan?.analyses?.[index];
   if (!item?.analysis) return;
   state.currentAnalysis = item.analysis;
-  state.currentMeta = { ...(item.meta || state.currentScan.meta), providerStatus: item.providerStatus || {} };
+  state.currentExecution = item.execution || null;
+  state.executionPreview = null;
+  state.currentMeta = { ...(state.currentScan.meta || {}), ...(item.meta || {}), providerStatus: item.providerStatus || {} };
   renderAnalysis(item.analysis, state.currentMeta, false);
   navigate("analyzer");
 }
@@ -975,6 +1507,8 @@ async function requestAnalysis() {
     progress.complete();
     await wait(420);
     state.currentAnalysis = response.analysis;
+    state.currentExecution = response.execution || null;
+    state.executionPreview = null;
     state.currentMeta = { ...response.meta, providerStatus: response.providerStatus };
     renderAnalysis(response.analysis, state.currentMeta, true);
     updateDashboardSignal(response.analysis);
@@ -1064,6 +1598,8 @@ function renderAnalysis(analysis, meta, announce = false) {
   const sources = Array.isArray(analysis.sources) ? analysis.sources : [];
   const breakdown = analysis.scoreBreakdown || {};
   const providerHealth = renderProviderHealth(meta?.providerStatus || {}, analysis.assetClass);
+  const executionEligible = Boolean(state.currentExecution?.eligible && state.currentExecution?.ticket);
+  const executionLabel = analysis.executionMode === "LIVE" ? "LIVE GATE" : analysis.executionMode === "DEMO_EXCHANGE" ? "DEMO GATE" : t("paperTrade");
 
   const level = (label, value, className = "") => `<div class="level-card ${className}"><span>${escapeHtml(label)}</span><strong title="${escapeAttr(value || "—")}">${escapeHtml(value || "—")}</strong></div>`;
   const reasonsHtml = (analysis.why || []).length ? analysis.why.map((reason) => `<li>${escapeHtml(reason)}</li>`).join("") : `<li>—</li>`;
@@ -1101,7 +1637,7 @@ function renderAnalysis(analysis, meta, announce = false) {
     ? `<div class="analysis-gate"><div><span class="terminal-line">DATA_GATE://BLOCKED</span><strong>${escapeHtml(state.language === "de" ? "Kein Entry aus unvollständigen Daten" : "No entry from incomplete data")}</strong><p>${escapeHtml(state.language === "de" ? "Trigger, Stop und Ziel werden erst angezeigt, wenn Preis-, Signal- und Ausführungsdaten verifiziert sind." : "Trigger, stop and target appear only after price, signal and execution data are verified.")}</p></div><div class="provider-health">${providerHealth}</div></div>`
     : `<div class="trade-levels">
       ${level(t("direction"), analysis.direction || "NONE")}
-      ${level(t("trigger"), trade.trigger)}
+      ${level(t("trigger"), trade.trigger ? `${String(trade.triggerCondition || "").replaceAll("_", " ")} ${trade.trigger}`.trim() : null)}
       ${level(t("entry"), trade.entry, "entry")}
       ${level(t("stop"), trade.stop, "stop")}
       ${level(t("target"), trade.target, "target")}
@@ -1132,8 +1668,8 @@ function renderAnalysis(analysis, meta, announce = false) {
       <section class="result-panel result-sources"><h3>${escapeHtml(t("verifiedSources"))}</h3><div class="citation-list">${sourceHtml}</div></section>
     </div>
     <div class="result-actions">
-      <div class="result-meta"><span><svg><use href="#i-clock"></use></svg>${escapeHtml(t("generated"))}: ${escapeHtml(shortUtc(meta?.generatedAt))}</span><span><svg><use href="#i-shield"></use></svg>${escapeHtml(t("paperTrade"))}</span></div>
-      <div class="head-actions"><button class="ghost-button" data-export-current><svg><use href="#i-download"></use></svg><span>${escapeHtml(t("exportResult"))}</span></button><button class="run-button" data-new-analysis><span>${escapeHtml(t("newAnalysis"))}</span><svg><use href="#i-refresh"></use></svg></button></div>
+      <div class="result-meta"><span><svg><use href="#i-clock"></use></svg>${escapeHtml(t("generated"))}: ${escapeHtml(shortUtc(meta?.generatedAt))}</span><span><svg><use href="#i-shield"></use></svg>${escapeHtml(executionLabel)}</span></div>
+      <div class="head-actions">${executionEligible ? `<button class="run-button" data-prepare-execution><span>${escapeHtml(state.language === "de" ? "AUSFÜHRUNG VORBEREITEN" : "PREPARE EXECUTION")}</span><svg><use href="#i-trade"></use></svg></button>` : ""}<button class="ghost-button" data-export-current><svg><use href="#i-download"></use></svg><span>${escapeHtml(t("exportResult"))}</span></button><button class="run-button" data-new-analysis><span>${escapeHtml(t("newAnalysis"))}</span><svg><use href="#i-refresh"></use></svg></button></div>
     </div>`;
 
   if (announce) toast(t("resultSaved"));
@@ -1170,7 +1706,7 @@ function storeAnalysis(analysis, meta) {
     analysis,
     fingerprint,
     evaluation: null,
-    meta: { model: meta?.model || null, durationMs: meta?.durationMs || null, source: meta?.source || "ASSET_ANALYSIS", paperTrading: true },
+    meta: { model: meta?.model || null, durationMs: meta?.durationMs || null, source: meta?.source || "ASSET_ANALYSIS", paperTrading: meta?.paperTrading !== false, executionMode: meta?.executionMode || state.execution.mode },
   };
   state.journal.unshift(record);
   state.journal = state.journal.slice(0, 100);
@@ -1201,7 +1737,8 @@ function renderJournal() {
   const total = state.journal.length;
   const good = state.journal.filter((item) => ["A", "A+"].includes(item.analysis?.verdict)).length;
   const noTrade = state.journal.filter((item) => !["A", "A+"].includes(item.analysis?.verdict)).length;
-  const values = [total, good, noTrade, 0];
+  const liveOrders = state.execution.mode === "LIVE" && state.execution.lastOrder?.submitted ? 1 : 0;
+  const values = [total, good, noTrade, liveOrders];
   elements.journalSummary.querySelectorAll("strong").forEach((node, index) => { node.textContent = String(values[index] ?? 0); });
   renderPerformanceMetrics();
 
@@ -1312,7 +1849,7 @@ function clearJournal() {
 
 function exportJournal() {
   if (!state.journal.length) return toast(t("nothingToExport"), "warning");
-  downloadJson(`jarvis-paper-journal-${dateStamp()}.json`, { version: "2.1", exportedAt: new Date().toISOString(), paperTrading: true, records: state.journal });
+  downloadJson(`jarvis-research-journal-${dateStamp()}.json`, { version: "2.3.0", exportedAt: new Date().toISOString(), executionMode: state.execution.mode, records: state.journal });
 }
 
 function exportCurrentAnalysis() {
@@ -1340,10 +1877,15 @@ async function apiFetch(url, options = {}) {
     method: options.method || "GET",
     headers,
     body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+    credentials: "same-origin",
   });
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(payload.error || `HTTP ${response.status}`);
+    const error = new Error(payload.error || `HTTP ${response.status}`);
+    error.code = payload.code || "REQUEST_FAILED";
+    error.details = payload.details || null;
+    error.status = response.status;
+    throw error;
   }
   return payload;
 }

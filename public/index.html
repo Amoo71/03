@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#050505" />
-    <meta name="description" content="J.A.R.V.I.S TradeAnalyzer — current market research, hard-veto filtering and paper-trading signals." />
+    <meta name="description" content="J.A.R.V.I.S TradeAnalyzer — current market research, hard-veto filtering and guarded eToro Demo/Live execution." />
     <title>J.A.R.V.I.S TradeAnalyzer</title>
     <link rel="stylesheet" href="/styles.css" />
     <script src="/app.js" type="module"></script>
@@ -28,6 +28,7 @@
       <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.3 3.7 2.8 17a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 3.7a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></symbol>
       <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
       <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+      <symbol id="i-trade" viewBox="0 0 24 24"><path d="M4 17 9 12l3 3 8-9"/><path d="M15 6h5v5"/><path d="M4 21h16"/></symbol>
     </svg>
 
     <div class="app-shell">
@@ -47,11 +48,14 @@
           <button class="rail-link" data-nav="analyzer" data-tooltip="Asset Analyzer" aria-label="Asset Analyzer">
             <span class="rail-icon" aria-hidden="true"><svg><use href="#i-command"></use></svg></span><span class="rail-label"><span data-i18n="navAnalyze">analyze</span><small>03</small></span>
           </button>
+          <button class="rail-link" data-nav="execution" data-tooltip="Execution" aria-label="Execution">
+            <span class="rail-icon" aria-hidden="true"><svg><use href="#i-trade"></use></svg></span><span class="rail-label"><span data-i18n="navExecution">execute</span><small>04</small></span>
+          </button>
           <button class="rail-link" data-nav="journal" data-tooltip="Journal" aria-label="Journal">
-            <span class="rail-icon" aria-hidden="true"><svg><use href="#i-book"></use></svg></span><span class="rail-label"><span data-i18n="navJournal">journal</span><small>04</small></span>
+            <span class="rail-icon" aria-hidden="true"><svg><use href="#i-book"></use></svg></span><span class="rail-label"><span data-i18n="navJournal">journal</span><small>05</small></span>
           </button>
           <button class="rail-link" data-nav="sources" data-tooltip="Sources" aria-label="Sources">
-            <span class="rail-icon" aria-hidden="true"><svg><use href="#i-nodes"></use></svg></span><span class="rail-label"><span data-i18n="navSources">sources</span><small>05</small></span>
+            <span class="rail-icon" aria-hidden="true"><svg><use href="#i-nodes"></use></svg></span><span class="rail-label"><span data-i18n="navSources">sources</span><small>06</small></span>
           </button>
         </nav>
 
@@ -65,7 +69,7 @@
           <div class="wordmark" data-nav="dashboard" role="button" tabindex="0">
             <span class="wordmark-main">jarvis@trade</span>
             <span class="wordmark-sub">:~/analyzer<span>$</span></span>
-            <span class="version">cli/2.1</span>
+            <span class="version">cli/2.3</span>
           </div>
 
           <div class="topbar-actions">
@@ -82,9 +86,9 @@
           </div>
         </header>
 
-        <div class="mode-strip">
-          <span class="mode-chip"><span class="mode-dot"></span><span data-i18n="paperMode">PAPER MODE</span></span>
-          <span class="mode-copy" data-i18n="modeCopy">Forward test · no real orders</span>
+        <div class="mode-strip" id="modeStrip">
+          <span class="mode-chip"><span class="mode-dot"></span><span id="modeChipLabel">PAPER MODE</span></span>
+          <span class="mode-copy" id="modeCopyLabel">Forward test · no real orders</span>
           <span class="utc-clock" id="utcClock">UTC --:--:--</span>
         </div>
 
@@ -116,10 +120,10 @@
               <div class="ascii-cap">+--[ system/status ]--------------------------------+</div>
               <dl class="system-table">
                 <div><dt>engine</dt><dd>jarvis.trade_analyzer</dd></div>
-                <div><dt>mode</dt><dd>paper_forward_test</dd></div>
+                <div><dt>mode</dt><dd id="systemModeValue">paper_forward_test</dd></div>
                 <div><dt>gate</dt><dd>score &gt;= 82</dd></div>
                 <div><dt>default</dt><dd class="warning">no_trade</dd></div>
-                <div><dt>orders</dt><dd>disabled</dd></div>
+                <div><dt>orders</dt><dd id="systemOrdersValue">disabled</dd></div>
                 <div><dt>status</dt><dd class="ok"><span class="cursor-block"></span> standby</dd></div>
               </dl>
               <div class="ascii-cap">+--------------------------------------------------+</div>
@@ -151,8 +155,8 @@
             </article>
             <article class="metric-card cli-card panel-reveal">
               <div class="metric-top"><span data-i18n="executionMode">EXECUTION MODE</span><span class="metric-icon mode"><span></span></span></div>
-              <div class="metric-value accent" data-i18n="paper">PAPER</div>
-              <div class="metric-foot"><span data-i18n="realOrdersDisabled">Real orders disabled</span><span>04</span></div>
+              <div class="metric-value accent" id="executionModeValue">PAPER</div>
+              <div class="metric-foot"><span id="executionModeFoot">Real orders disabled</span><span>04</span></div>
             </article>
           </div>
 
@@ -193,12 +197,12 @@
         <section class="view" data-view="scanner">
           <div class="page-heading panel-reveal">
             <div><span class="eyebrow"><span>02</span><span data-i18n="masterScanner">MASTER SCANNER</span></span><h1 data-i18n-html="scannerTitle">scan --scope global<br /><em>filter --strict</em></h1></div>
-            <p data-i18n="scannerIntro">Candidate discovery followed by a full independent deep analysis. Only executable A/A+ paper setups reach the alert feed.</p>
+            <p data-i18n="scannerIntro">Candidate discovery followed by a full independent deep analysis. Only executable A/A+ setups reach the alert feed; the scanner never auto-submits an order.</p>
           </div>
 
           <div class="scanner-layout">
             <aside class="analysis-controls cli-card panel-reveal">
-              <div class="section-head compact"><div><span class="section-index">SCAN://CONFIG</span><h2 data-i18n="scanConfiguration">Scan configuration</h2></div><span class="paper-tag" data-i18n="paperOnly">PAPER ONLY</span></div>
+              <div class="section-head compact"><div><span class="section-index">SCAN://CONFIG</span><h2 data-i18n="scanConfiguration">Scan configuration</h2></div><span class="paper-tag" data-i18n="researchOnly">RESEARCH GATE</span></div>
               <form id="scannerForm" class="analysis-form">
                 <label class="field full"><span data-i18n="marketScope">Market scope</span><select id="scanScope"><option value="GLOBAL" data-i18n="scopeGlobal">Global — all markets</option><option value="CRYPTO" data-i18n="scopeCrypto">Crypto + altcoins</option><option value="MEME" data-i18n="scopeMeme">Meme coins</option><option value="EQUITIES" data-i18n="scopeEquities">Stocks + ETFs + indices</option><option value="MACRO" data-i18n="scopeMacro">Gold + forex + macro</option></select></label>
                 <label class="field"><span data-i18n="horizon">Horizon</span><select id="scanHorizon"><option value="INTRADAY">Intraday</option><option value="SWING" selected>Swing</option><option value="POSITION">Position</option></select></label>
@@ -208,7 +212,7 @@
                   <div><svg><use href="#i-check"></use></svg><span data-i18n="discoverThenVerify">Discover first, verify each candidate second</span></div>
                   <div><svg><use href="#i-check"></use></svg><span data-i18n="onlyAA">Only A/A+ enters the alert feed</span></div>
                   <div><svg><use href="#i-check"></use></svg><span data-i18n="noForcedTrade">Empty result is valid — no forced trade</span></div>
-                  <div><svg><use href="#i-check"></use></svg><span data-i18n="paperNoOrders">Paper only — never sends an order</span></div>
+                  <div><svg><use href="#i-check"></use></svg><span data-i18n="manualExecutionOnly">Never auto-submits — execution requires a separate operator gate</span></div>
                 </div>
                 <button class="run-button large full" type="submit" id="scanButton"><span data-i18n="startMasterScan">START MASTER SCAN</span><svg><use href="#i-scan"></use></svg></button>
                 <button class="ghost-button full" type="button" id="morningBriefButton"><svg><use href="#i-clock"></use></svg><span data-i18n="morningBrief">MORNING BRIEF · TOP 5</span></button>
@@ -249,12 +253,12 @@
         <section class="view" data-view="analyzer">
           <div class="page-heading panel-reveal">
             <div><span class="eyebrow"><span>03</span><span data-i18n="liveResearch">LIVE RESEARCH</span></span><h1 data-i18n-html="analyzerTitle">analyze --asset<br /><em>verify --sources</em></h1></div>
-            <p data-i18n="analyzerIntro">One current request, multiple independent checks, one immutable paper-trade decision.</p>
+            <p data-i18n="analyzerIntro">One current request, multiple independent checks and a signed execution ticket only when every A/A+ rule passes.</p>
           </div>
 
           <div class="analyzer-layout">
             <aside class="analysis-controls cli-card panel-reveal">
-              <div class="section-head compact"><div><span class="section-index">REQUEST://NEW</span><h2 data-i18n="analysisRequest">Analysis request</h2></div><span class="paper-tag" data-i18n="paperOnly">PAPER ONLY</span></div>
+              <div class="section-head compact"><div><span class="section-index">REQUEST://NEW</span><h2 data-i18n="analysisRequest">Analysis request</h2></div><span class="paper-tag" data-i18n="researchOnly">RESEARCH GATE</span></div>
               <form id="analysisForm" class="analysis-form">
                 <label class="field full"><span data-i18n="assetContract">Asset, ticker or contract</span><input id="assetInput" name="asset" autocomplete="off" spellcheck="false" placeholder="BTC" required maxlength="96" /><small data-i18n="assetExamples">Examples: BTC, NVDA, XAUUSD or token contract</small></label>
                 <label class="field"><span data-i18n="assetClass">Asset class</span><select id="assetClass" name="assetClass"><option value="CRYPTO">Crypto</option><option value="MEME">Meme coin</option><option value="STOCK">Stock</option><option value="ETF">ETF</option><option value="INDEX">Index</option><option value="FOREX">Forex</option><option value="GOLD">Gold</option><option value="COMMODITY">Commodity</option><option value="OTHER">Other</option></select></label>
@@ -301,9 +305,88 @@
           </div>
         </section>
 
+        <section class="view" data-view="execution">
+          <div class="page-heading panel-reveal">
+            <div><span class="eyebrow"><span>04</span><span data-i18n="brokerExecution">BROKER EXECUTION</span></span><h1 data-i18n-html="executionTitle">execute --broker etoro<br /><em>verify --then submit</em></h1></div>
+            <p data-i18n="executionIntro">A separate deterministic gate between AI research and eToro. No signal can submit itself.</p>
+          </div>
+
+          <div class="execution-warning panel-reveal" id="executionModeBanner">
+            <svg><use href="#i-shield"></use></svg>
+            <div><span class="terminal-line" id="executionBannerCode">EXECUTION://PAPER</span><strong id="executionBannerTitle">Broker writes are disabled.</strong><p id="executionBannerCopy">Configure Demo Exchange first. Live requires an additional explicit opt-in and boots with the kill switch active.</p></div>
+          </div>
+
+          <div class="execution-status-grid panel-reveal" aria-label="Execution status">
+            <article class="cli-card"><span data-i18n="mode">MODE</span><strong id="execModeStatus">PAPER</strong><small id="execModeDetail">research only</small></article>
+            <article class="cli-card"><span data-i18n="broker">BROKER</span><strong id="execBrokerStatus">NOT CONFIGURED</strong><small>eToro API</small></article>
+            <article class="cli-card"><span data-i18n="writeGate">WRITE GATE</span><strong id="execWriteStatus">LOCKED</strong><small id="execArmStatus">not armed</small></article>
+            <article class="cli-card"><span data-i18n="killSwitch">KILL SWITCH</span><strong id="execKillStatus">ACTIVE</strong><small id="execLockReason">fail closed</small></article>
+          </div>
+
+          <div class="execution-layout">
+            <div class="execution-column">
+              <article class="cli-card execution-card panel-reveal">
+                <div class="section-head compact"><div><span class="section-index">AUTH://OPERATOR</span><h2 data-i18n="operatorAccess">Operator access</h2></div><span class="server-secret-note"><svg><use href="#i-lock"></use></svg><span data-i18n="serverSecretsOnly">SERVER SECRETS ONLY</span></span></div>
+                <div id="executionLoginPanel">
+                  <p class="execution-copy" data-i18n="operatorLoginCopy">This is the separate operator password from Render, not an API key. The session is stored only in an HttpOnly cookie.</p>
+                  <form id="executionLoginForm" class="execution-form">
+                    <label class="field full"><span data-i18n="operatorPassword">Operator password</span><input id="operatorPassword" type="password" autocomplete="current-password" minlength="12" required /></label>
+                    <button class="run-button full" id="executionLoginButton" type="submit"><span data-i18n="unlockConsole">UNLOCK CONSOLE</span><svg><use href="#i-key"></use></svg></button>
+                  </form>
+                </div>
+                <div id="executionSessionPanel" hidden>
+                  <div class="operator-session"><span class="status-led ready"></span><div><strong data-i18n="operatorAuthenticated">OPERATOR AUTHENTICATED</strong><small data-i18n="sessionServerSide">Protected same-site server session</small></div></div>
+                  <div class="head-actions execution-session-actions"><button class="ghost-button" id="executionReconcileButton" type="button"><svg><use href="#i-refresh"></use></svg><span data-i18n="reconcile">RECONCILE</span></button><button class="ghost-button" id="executionLogoutButton" type="button"><svg><use href="#i-lock"></use></svg><span data-i18n="logout">LOG OUT</span></button></div>
+                </div>
+              </article>
+
+              <article class="cli-card execution-card panel-reveal">
+                <div class="section-head compact"><div><span class="section-index">SIGNAL://SIGNED_TICKET</span><h2 data-i18n="executionCandidate">Execution candidate</h2></div><span class="paper-tag" id="executionSignalBadge">NONE</span></div>
+                <div class="execution-signal" id="executionSignal">
+                  <svg><use href="#i-trade"></use></svg><div><strong data-i18n="noExecutionSignal">No executable signed signal.</strong><p data-i18n="runAnalyzerForSignal">Run the analyzer or scanner. Only fresh A/A+ results can create a short-lived ticket.</p></div>
+                </div>
+                <form id="executionOrderForm" class="execution-form" hidden>
+                  <label class="field full"><span data-i18n="orderAmount">Order amount (USD)</span><input id="executionAmount" type="number" inputmode="decimal" min="1" step="0.01" value="50" required /></label>
+                  <button class="ghost-button full" id="executionPreviewButton" type="button"><svg><use href="#i-scan"></use></svg><span data-i18n="brokerPreview">RUN BROKER PREFLIGHT</span></button>
+                  <div class="execution-preview full" id="executionPreview"><span class="terminal-line">PREFLIGHT://WAITING</span><p data-i18n="preflightCopy">Checks live bid/ask, spread, eligibility, costs, portfolio limits and signal freshness.</p></div>
+                  <div class="execution-step full">
+                    <span class="step-number">01</span>
+                    <label class="field"><span data-i18n="armPhrase">Arm phrase</span><input id="executionArmConfirmation" autocomplete="off" spellcheck="false" placeholder="ARM DEMO" /></label>
+                    <button class="ghost-button" id="executionArmButton" type="button"><span data-i18n="armExecution">ARM</span></button>
+                  </div>
+                  <div class="execution-step full critical-step">
+                    <span class="step-number">02</span>
+                    <label class="field"><span data-i18n="orderPhrase">Final order phrase</span><input id="executionOrderConfirmation" autocomplete="off" spellcheck="false" placeholder="EXECUTE DEMO BTC" /></label>
+                    <button class="run-button danger-button" id="executionOrderButton" type="submit" disabled><span data-i18n="submitOrder">SUBMIT ORDER</span><svg><use href="#i-trade"></use></svg></button>
+                  </div>
+                  <div class="execution-controls full"><button class="ghost-button" id="executionDisarmButton" type="button"><span data-i18n="disarm">DISARM</span></button><button class="ghost-button danger" id="executionKillButton" type="button"><svg><use href="#i-alert"></use></svg><span data-i18n="activateKillSwitch">ACTIVATE KILL SWITCH</span></button></div>
+                </form>
+              </article>
+            </div>
+
+            <div class="execution-column">
+              <article class="cli-card execution-card panel-reveal">
+                <div class="section-head compact"><div><span class="section-index">BROKER://PORTFOLIO</span><h2 data-i18n="brokerPortfolio">Broker portfolio</h2></div><button class="ghost-button compact-button" id="portfolioRefreshButton" type="button"><svg><use href="#i-refresh"></use></svg><span data-i18n="refresh">REFRESH</span></button></div>
+                <div class="portfolio-console" id="executionPortfolio"><div class="execution-empty"><span class="terminal-line">PORTFOLIO://LOCKED</span><p data-i18n="loginToReconcile">Authenticate and reconcile directly with eToro.</p></div></div>
+              </article>
+
+              <article class="cli-card execution-card panel-reveal">
+                <div class="section-head compact"><div><span class="section-index">ORDER://LAST</span><h2 data-i18n="lastBrokerOrder">Last broker order</h2></div><button class="ghost-button compact-button" id="executionOrderStatusButton" type="button" disabled><svg><use href="#i-refresh"></use></svg><span data-i18n="checkStatus">CHECK STATUS</span></button></div>
+                <div class="last-order-console" id="executionLastOrder"><span class="terminal-line">ORDER://NONE</span><p data-i18n="noBrokerOrder">No broker mutation has been submitted in this server process.</p></div>
+              </article>
+
+              <article class="cli-card execution-card limits-card panel-reveal">
+                <div class="section-head compact"><div><span class="section-index">RISK://SERVER_LIMITS</span><h2 data-i18n="immutableLimits">Server-enforced limits</h2></div><svg class="section-shield"><use href="#i-shield"></use></svg></div>
+                <div class="execution-limits" id="executionLimits"></div>
+                <p class="execution-copy" data-i18n="limitsCopy">Browser edits cannot override these values. LIVE uses leverage 1 and one-time signed signal tickets.</p>
+              </article>
+            </div>
+          </div>
+        </section>
+
         <section class="view" data-view="journal">
           <div class="page-heading panel-reveal">
-            <div><span class="eyebrow"><span>04</span><span data-i18n="forwardTest">FORWARD TEST</span></span><h1 data-i18n-html="journalTitle">paper.log<br /><em>forward only</em></h1></div>
+            <div><span class="eyebrow"><span>05</span><span data-i18n="forwardTest">FORWARD TEST</span></span><h1 data-i18n-html="journalTitle">paper.log<br /><em>forward only</em></h1></div>
             <p data-i18n="journalIntro">Only analyses generated before a move are stored. No retroactive winners.</p>
           </div>
 
@@ -354,7 +437,7 @@
 
         <section class="view" data-view="sources">
           <div class="page-heading panel-reveal">
-            <div><span class="eyebrow"><span>05</span><span data-i18n="sourceArchitecture">SOURCE ARCHITECTURE</span></span><h1 data-i18n-html="sourcesTitle">Evidence before <em>opinion.</em></h1></div>
+            <div><span class="eyebrow"><span>06</span><span data-i18n="sourceArchitecture">SOURCE ARCHITECTURE</span></span><h1 data-i18n-html="sourcesTitle">Evidence before <em>opinion.</em></h1></div>
             <p data-i18n="sourcesIntro">Core research is domain-restricted. All model and data credentials stay in protected server secrets.</p>
           </div>
 
@@ -373,8 +456,8 @@
         </section>
 
         <footer class="site-footer">
-          <span>J.A.R.V.I.S TRADEANALYZER // v2.2.1 MASTER</span>
-          <p data-i18n="disclaimer">Research tool for paper trading. No financial advice. No profit guarantees.</p>
+          <span>J.A.R.V.I.S TRADEANALYZER // v2.3.0 MASTER</span>
+          <p data-i18n="disclaimer">Research and controlled execution tool. No financial advice. No profit guarantees.</p>
         </footer>
       </main>
 
@@ -382,6 +465,7 @@
         <button class="active" data-nav="dashboard"><span class="mobile-icon"><svg><use href="#i-grid"></use></svg></span><span data-i18n="navHome">Home</span></button>
         <button data-nav="scanner"><span class="mobile-icon"><svg><use href="#i-scan"></use></svg></span><span data-i18n="navScan">Scan</span></button>
         <button data-nav="analyzer"><span class="mobile-icon"><svg><use href="#i-command"></use></svg></span><span data-i18n="navAnalyze">Analyze</span></button>
+        <button data-nav="execution"><span class="mobile-icon"><svg><use href="#i-trade"></use></svg></span><span data-i18n="navExecution">Execute</span></button>
         <button data-nav="journal"><span class="mobile-icon"><svg><use href="#i-book"></use></svg></span><span data-i18n="navJournal">Journal</span></button>
         <button data-nav="sources"><span class="mobile-icon"><svg><use href="#i-nodes"></use></svg></span><span data-i18n="navSources">Sources</span></button>
       </nav>

@@ -96,7 +96,7 @@ const app = spawn(process.execPath, ["server.mjs"], {
 try {
   await waitForHealth(appPort);
   const health = await api(appPort, "/api/health");
-  assert.equal(health.payload.version, "2.2.1");
+  assert.equal(health.payload.version, "2.3.0");
   const config = await api(appPort, "/api/config");
   assert.equal(config.payload.analyzer.ready, true);
   assert.equal(config.payload.analyzer.primary, "openrouter");
@@ -106,7 +106,8 @@ try {
   assert.match(page.headers.get("content-security-policy") || "", /default-src 'self'/);
   const html = await page.text();
   assert.match(html, /MASTER SCANNER/);
-  assert.doesNotMatch(html, /API Vault|apiDialog|type="password"|data-open-api/);
+  assert.doesNotMatch(html, /API Vault|apiDialog|data-open-api|ETORO_API_KEY|ETORO_USER_KEY/);
+  assert.match(html, /id="operatorPassword" type="password"/, "the only browser credential is the separate operator password");
 
   const fallback = await api(appPort, "/api/analyze", {
     method: "POST",
@@ -189,14 +190,14 @@ async function validateFrontendContracts() {
   ]);
   const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]);
   assert.equal(new Set(ids).size, ids.length, "HTML ids must be unique");
-  for (const id of ["scannerForm", "scannerResults", "analysisForm", "journalList", "positionForm", "engineStatus"]) {
+  for (const id of ["scannerForm", "scannerResults", "analysisForm", "executionLoginForm", "executionOrderForm", "executionPortfolio", "journalList", "positionForm", "engineStatus"]) {
     assert.ok(ids.includes(id), `missing #${id}`);
     assert.ok(js.includes(`#${id}`), `frontend does not bind #${id}`);
   }
-  for (const view of ["dashboard", "scanner", "analyzer", "journal", "sources"]) {
+  for (const view of ["dashboard", "scanner", "analyzer", "execution", "journal", "sources"]) {
     assert.ok(html.includes(`data-view="${view}"`), `missing ${view} view`);
   }
-  assert.equal((html.match(/class="mobile-icon"/g) || []).length, 5, "every mobile tab needs an icon");
+  assert.equal((html.match(/class="mobile-icon"/g) || []).length, 6, "every mobile tab needs an icon");
   assert.match(js, /candidate-card diagnostic/, "insufficient-data candidates need a compact diagnostic state");
   assert.match(js, /provider-health/, "provider health must be visible in the result UI");
   const selectorIds = [...js.matchAll(/querySelector\(["']#([A-Za-z][\w-]*)["']\)/g)].map((match) => match[1]);
@@ -284,7 +285,7 @@ function analysisFixture() {
     asset: "TEST", assetName: "Test Corporation", assetClass: "STOCK", dataAsOf: new Date().toISOString(),
     marketTrend: "RISK_ON", headline: "Verified paper setup", score: 90, verdict: "A+", direction: "BUY", confidence: "HIGH",
     etoro: { status: "CONFIRMED", instrument: "Underlying stock", buyAvailable: true, sellAvailable: true, costNotes: "Spread applies; no CFD overnight fee for unleveraged BUY." },
-    trade: { trigger: "100", entry: "100", stop: "95", target: "110", rr: 2, risk: "MEDIUM", invalidation: "Close below 95." },
+    trade: { trigger: "100", triggerCondition: "AT_OR_ABOVE", entry: "100", stop: "95", target: "110", rr: 2, risk: "MEDIUM", invalidation: "Close below 95." },
     why: ["Fresh filing", "Volume breakout"],
     confirmations: [{ type: "CATALYST", evidence: "Current filing" }, { type: "PRICE_VOLUME", evidence: "Independent breakout" }],
     redFlags: ["Broad-market reversal"], hardVetoes: [],
@@ -312,7 +313,7 @@ function cryptoAnalysisFixture() {
     direction: "NONE",
     confidence: "LOW",
     etoro: { status: "UNCONFIRMED", instrument: null, buyAvailable: null, sellAvailable: null, costNotes: "Not verified." },
-    trade: { trigger: null, entry: null, stop: null, target: null, rr: null, risk: "UNKNOWN", invalidation: "" },
+    trade: { trigger: null, triggerCondition: "NONE", entry: null, stop: null, target: null, rr: null, risk: "UNKNOWN", invalidation: "" },
     why: ["No independent setup confirmation"],
     confirmations: [],
     redFlags: ["Execution is not verified"],
