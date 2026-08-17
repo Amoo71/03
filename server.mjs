@@ -12,10 +12,13 @@ const PORT = Number(process.env.PORT || 4173);
 const OPENROUTER_API_BASE = String(process.env.OPENROUTER_API_BASE || "https://openrouter.ai/api/v1").replace(/\/$/, "");
 const HUGGINGFACE_API_BASE = String(process.env.HUGGINGFACE_API_BASE || "https://router.huggingface.co/v1").replace(/\/$/, "");
 const OPENROUTER_MODEL = String(process.env.OPENROUTER_MODEL || "openrouter/free").trim();
-const HUGGINGFACE_MODEL = String(process.env.HUGGINGFACE_MODEL || "openai/gpt-oss-120b").trim();
+const HUGGINGFACE_MODEL = String(process.env.HUGGINGFACE_MODEL || "openai/gpt-oss-120b:fastest").trim();
+const OPENROUTER_FALLBACK_MODELS = String(process.env.OPENROUTER_FALLBACK_MODELS || "").split(",").map((value) => value.trim()).filter(Boolean).slice(0, 3);
 const OPENROUTER_WEB_SEARCH = !/^(0|false|no|off)$/i.test(String(process.env.OPENROUTER_WEB_SEARCH ?? "true"));
 const CMC_PRO_API_BASE = String(process.env.CMC_PRO_API_BASE || "https://pro-api.coinmarketcap.com").replace(/\/$/, "");
 const CMC_PUBLIC_API_BASE = String(process.env.CMC_PUBLIC_API_BASE || "https://pro-api.coinmarketcap.com/public-api").replace(/\/$/, "");
+const COINBASE_EXCHANGE_API_BASE = String(process.env.COINBASE_EXCHANGE_API_BASE || "https://api.exchange.coinbase.com").replace(/\/$/, "");
+const KRAKEN_API_BASE = String(process.env.KRAKEN_API_BASE || "https://api.kraken.com").replace(/\/$/, "");
 const MAX_BODY_BYTES = 64 * 1024;
 const rateBuckets = new Map();
 let marketCache = { expiresAt: 0, value: null };
@@ -28,6 +31,8 @@ const CORE_DOMAINS = [
   "kiyotaka.ai",
   "openmarket.xyz",
   "etoro.com",
+  "coinbase.com",
+  "kraken.com",
 ];
 
 const EXTENDED_DOMAINS = [
@@ -383,7 +388,7 @@ server.listen(PORT, "0.0.0.0", () => {
 
 async function routeApi(req, res, url) {
   if (req.method === "GET" && url.pathname === "/api/health") {
-    sendJson(res, 200, { ok: true, service: "jarvis-tradeanalyzer", version: "2.1.0" });
+    sendJson(res, 200, { ok: true, service: "jarvis-tradeanalyzer", version: "2.2.0" });
     return;
   }
 
@@ -400,6 +405,8 @@ async function routeApi(req, res, url) {
         cmc: Boolean(process.env.CMC_API_KEY),
         coinalyze: Boolean(process.env.COINALYZE_API_KEY),
         openmarket: Boolean(process.env.OPENMARKET_API_KEY),
+        coinbase: true,
+        kraken: true,
       },
       sourceDomains: { core: CORE_DOMAINS, extended: EXTENDED_DOMAINS },
     });
@@ -532,7 +539,7 @@ async function routeApi(req, res, url) {
     }
     const evaluation = await runTradeEvaluation(record, aiProviders);
     evaluation.result.sources = mergeAndSanitizeSources(
-      evaluation.webResearch ? evaluation.result.sources : [],
+      [],
       evaluation.webResearch ? evaluation.citations : [],
       [],
       record.analysis.request?.sourceMode === "CORE" ? "CORE" : "EXTENDED"
@@ -599,13 +606,14 @@ Rules:
 - Never guarantee profit, invent numbers, backfill a winner, or force a trade.
 - If freshness, price, contract, tradability, liquidity, stop, target, or a material risk cannot be verified, return NO_TRADE or INSUFFICIENT_DATA.
 - Source hierarchy: primary source/blockchain/regulator/exchange first; professional raw data second; aggregators third; social last.
-- For crypto, explicitly cross-check CoinMarketCap market context, Arkham public wallet/entity intelligence (including labeled institutional/whale wallets when relevant), Coinalyze derivatives positioning and Kiyotaka/OpenMarket orderflow when data is available. Record unavailable coverage as a limitation; never fill the gap by inference.
+- For crypto, reconcile Coinbase and Kraken public exchange price/candle/order-book data with CoinMarketCap market context. Then cross-check Arkham public wallet/entity intelligence (including labeled institutional/whale wallets when relevant), Coinalyze derivatives positioning and Kiyotaka/OpenMarket orderflow when available. Record unavailable coverage as a limitation; never fill the gap by inference.
+- Coinbase, Kraken and CoinMarketCap reporting the same price movement confirms market data coverage, but it is not three independent trading signal types.
 - Stocks and major crypto need at least 2 independent signal types. Meme coins need at least 3.
 - Hard vetoes include unclear contract, honeypot or sell restriction, critical mint/freeze authority, extreme holder concentration, inadequate liquidity, extreme spread/slippage, fake volume/manipulation, conflicting primary data, unclear invalidation, no viable exit, reward/risk below 2:1, material unknown risk, or unavailable execution.
 - Score exactly: catalyst 0-15, technical/price/volume 0-15, derivatives/orderflow 0-15, smart money/on-chain/insiders 0-15, liquidity/execution 0-10, verified trader consensus 0-10, reward/risk 0-10, data quality/freshness 0-10. The eight values must sum to score.
 - A+ is 90-100. A is 82-89. Below 82 is NO_TRADE.
 - Verify eToro Germany availability, direction, instrument type and relevant execution costs. Unverified eToro status is not an executable eToro trade.
-- Fill marketData only with values that can be verified as current. Preserve units and use null when unavailable.
+- Fill marketData only with values that can be verified as current. Preserve units and use null when unavailable. Direct server exchange fields override model estimates during final validation.
 - For MEME assets, perform the full memeDueDiligence check: exact contract and chain, liquidity/exit liquidity, holders and concentration excluding known LP/exchange context, LP status, mint/freeze controls, honeypot/taxes, deployer history, snipers/bundles, wallet clusters and manipulation. Any critical contract-security red flag must be a hard veto. For non-meme assets set applies=false and the other unavailable fields to null.
 - This is forward-test paper trading only.
 - Keep headline, reasons, risks and limitations concise. Write all human-readable strings in ${language}.
@@ -730,6 +738,10 @@ async function requestAiProvider({ provider, allowedDomains, instructions, promp
       max_tokens: maxOutputTokens,
     };
     if (provider.id === "openrouter") {
+      if (provider.models?.length > 1) {
+        body.models = provider.models;
+        delete body.model;
+      }
       body.provider = { require_parameters: true };
       if (provider.webSearch) body.plugins = [{ id: "web", max_results: 8, include_domains: allowedDomains }];
     }
@@ -789,6 +801,15 @@ function enforceTradingRules(result, input, annotations, providerData, webResear
   safe.etoro ||= { status: "UNCONFIRMED", instrument: null, buyAvailable: null, sellAvailable: null, costNotes: "" };
   safe.marketData ||= { price: null, change24h: null, volume24h: null, marketCap: null, fdv: null, liquidity: null, openInterest: null, fundingRate: null, liquidations24h: null, timeframes: [] };
   safe.memeDueDiligence ||= { applies: input.assetClass === "MEME", contract: null, chain: input.chain, tokenAge: null, supply: null, holders: null, top10Share: null, top20Share: null, teamShare: null, creatorShare: null, liquidity: null, exitLiquidity: null, lpStatus: null, mintAuthority: null, freezeAuthority: null, honeypot: null, taxes: null, deployerHistory: null, sniperBundledRisk: null, walletClusters: null, manipulationRisk: null, socialNarrative: null, criticalRedFlag: false, notes: [] };
+  safe.dataQuality ||= { freshness: "Unknown", sourcesChecked: 0, conflicts: [], limitations: [] };
+  safe.dataQuality.conflicts = Array.isArray(safe.dataQuality.conflicts) ? safe.dataQuality.conflicts.slice(0, 6) : [];
+  safe.dataQuality.limitations = Array.isArray(safe.dataQuality.limitations) ? safe.dataQuality.limitations.slice(0, 8) : [];
+
+  const marketReconciliation = enrichVerifiedMarketData(safe, providerData, input);
+  if (marketReconciliation.priceConflict) {
+    addUnique(safe.dataQuality.conflicts, marketReconciliation.priceConflict);
+    addUnique(safe.hardVetoes, "Direct exchange prices conflict beyond the accepted tolerance.");
+  }
 
   const requiredConfirmations = input.assetClass === "MEME" ? 3 : 2;
   if (safe.confirmations.length < requiredConfirmations) {
@@ -832,16 +853,16 @@ function enforceTradingRules(result, input, annotations, providerData, webResear
 
   const providerSources = directProviderSources(providerData);
   safe.sources = mergeAndSanitizeSources(
-    webResearch ? safe.sources : [],
+    [],
     webResearch ? annotations : [],
     providerSources,
     input.sourceMode
   );
-  safe.dataQuality ||= { freshness: "Unknown", sourcesChecked: 0, conflicts: [], limitations: [] };
   safe.dataQuality.sourcesChecked = safe.sources.length;
-  safe.dataQuality.conflicts = Array.isArray(safe.dataQuality.conflicts) ? safe.dataQuality.conflicts.slice(0, 6) : [];
-  safe.dataQuality.limitations = Array.isArray(safe.dataQuality.limitations) ? safe.dataQuality.limitations.slice(0, 8) : [];
   if (!webResearch) addUnique(safe.dataQuality.limitations, "AI fallback had no live web-search verification; only direct server data was accepted.");
+  if (safe.etoro.status === "CONFIRMED" && !safe.sources.some((source) => sourceHostMatches(source.url, "etoro.com"))) {
+    addUnique(safe.hardVetoes, "eToro Germany confirmation has no retrieved eToro source citation.");
+  }
   if (safe.sources.length < requiredConfirmations) {
     addUnique(safe.hardVetoes, "Insufficient verifiable source coverage.");
   }
@@ -872,6 +893,8 @@ async function collectProviderData(input, keys, aiProviders) {
   const cryptoLike = ["CRYPTO", "MEME"].includes(input.assetClass);
   const jobs = {
     coinmarketcap: cryptoLike ? fetchCoinMarketCapAsset(input, keys.cmc) : Promise.resolve(unavailable("Not a crypto asset.")),
+    coinbase: cryptoLike && !looksLikeContract(input.asset) ? fetchCoinbaseAsset(input) : Promise.resolve(unavailable(cryptoLike ? "Contract-address assets cannot be resolved to a Coinbase product safely." : "Not a crypto asset.")),
+    kraken: cryptoLike && !looksLikeContract(input.asset) ? fetchKrakenAsset(input) : Promise.resolve(unavailable(cryptoLike ? "Contract-address assets cannot be resolved to a Kraken pair safely." : "Not a crypto asset.")),
     coinalyze: cryptoLike && keys.coinalyze ? fetchCoinalyzeAsset(input, keys.coinalyze) : Promise.resolve(unavailable(keys.coinalyze ? "Not a crypto asset." : "No Coinalyze key configured.")),
     openmarket: cryptoLike && keys.openmarket ? fetchOpenMarketAsset(input, keys.openmarket) : Promise.resolve(unavailable(keys.openmarket ? "Not a crypto asset." : "No OpenMarket key configured.")),
     arkham: Promise.resolve({
@@ -905,7 +928,70 @@ async function fetchCoinMarketCapAsset(input, apiKey) {
     endpoint = `/v3/cryptocurrency/quotes/latest?symbol=${encodeURIComponent(symbol)}&convert=USD`;
   }
   const data = await fetchCmc(endpoint, apiKey);
-  return { status: "ok", observedAt: new Date().toISOString(), endpoint: stripQuerySecrets(endpoint), data };
+  if (!looksLikeContract(input.asset) && !extractCmcAsset(data, symbol)) {
+    throw new Error(`CoinMarketCap returned no confirmed ${symbol} record.`);
+  }
+  if (looksLikeContract(input.asset) && !payloadHasObservations(data)) {
+    throw new Error("CoinMarketCap returned no confirmed contract record.");
+  }
+  return { status: "ok", observedAt: new Date().toISOString(), symbol, endpoint: stripQuerySecrets(endpoint), data };
+}
+
+async function fetchCoinbaseAsset(input) {
+  const symbol = normalizeSymbol(input.asset);
+  if (!symbol) throw new Error("No Coinbase base asset could be resolved.");
+
+  let product;
+  let ticker;
+  for (const quote of ["USD", "USDT"]) {
+    const candidate = `${symbol}-${quote}`;
+    try {
+      ticker = await fetchJson(`${COINBASE_EXCHANGE_API_BASE}/products/${encodeURIComponent(candidate)}/ticker`, { timeoutMs: 12_000 });
+      product = candidate;
+      break;
+    } catch {
+      // Try the next liquid quote currency before marking the adapter unavailable.
+    }
+  }
+  if (!product || !Number.isFinite(Number(ticker?.price))) throw new Error(`No public Coinbase ${symbol} market was resolved.`);
+
+  const [candlesResult, bookResult] = await Promise.allSettled([
+    fetchJson(`${COINBASE_EXCHANGE_API_BASE}/products/${encodeURIComponent(product)}/candles?granularity=3600`, { timeoutMs: 12_000 }),
+    fetchJson(`${COINBASE_EXCHANGE_API_BASE}/products/${encodeURIComponent(product)}/book?level=1`, { timeoutMs: 12_000 }),
+  ]);
+  const candles = candlesResult.status === "fulfilled" && Array.isArray(candlesResult.value) ? candlesResult.value : [];
+  const book = bookResult.status === "fulfilled" && Array.isArray(bookResult.value?.bids) && Array.isArray(bookResult.value?.asks) ? bookResult.value : null;
+  const partial = [candles.length ? null : "candles", book ? null : "order book"].filter(Boolean);
+
+  return {
+    status: "ok",
+    observedAt: new Date().toISOString(),
+    symbol,
+    product,
+    note: partial.length ? `Partial Coinbase coverage: ${partial.join(" and ")} unavailable.` : null,
+    data: { ticker, candles: candles.slice(0, 72), book },
+  };
+}
+
+async function fetchKrakenAsset(input) {
+  const symbol = normalizeSymbol(input.asset);
+  if (!symbol) throw new Error("No Kraken base asset could be resolved.");
+  const pair = `${symbol === "BTC" ? "XBT" : symbol}USD`;
+  const tickerPayload = await fetchJson(`${KRAKEN_API_BASE}/0/public/Ticker?pair=${encodeURIComponent(pair)}`, { timeoutMs: 12_000 });
+  const ohlcPayload = await fetchJson(`${KRAKEN_API_BASE}/0/public/OHLC?pair=${encodeURIComponent(pair)}&interval=60`, { timeoutMs: 12_000 }).catch(() => null);
+  const ticker = firstKrakenResult(tickerPayload);
+  const candles = firstKrakenResult(ohlcPayload, new Set(["last"]));
+  if (tickerPayload?.error?.length || !ticker || !Number.isFinite(Number(ticker?.c?.[0]))) {
+    throw new Error(`No public Kraken ${pair} ticker was resolved.`);
+  }
+  return {
+    status: "ok",
+    observedAt: new Date().toISOString(),
+    symbol,
+    pair,
+    note: Array.isArray(candles) && candles.length ? null : `Partial Kraken coverage: ${pair} hourly candles unavailable.`,
+    data: { ticker, candles: Array.isArray(candles) ? candles.slice(-72) : [] },
+  };
 }
 
 async function fetchCoinalyzeAsset(input, apiKey) {
@@ -934,6 +1020,9 @@ async function fetchCoinalyzeAsset(input, apiKey) {
     fetchJson(`https://api.coinalyze.net/v1/funding-rate?symbols=${query}`, { headers: { api_key: apiKey }, timeoutMs: 15_000 }),
     fetchJson(`https://api.coinalyze.net/v1/predicted-funding-rate?symbols=${query}`, { headers: { api_key: apiKey }, timeoutMs: 15_000 }),
   ]);
+  if (![openInterest, fundingRate, predictedFunding].some(payloadHasObservations)) {
+    throw new Error(`Coinalyze returned no current observations for ${market.symbol}.`);
+  }
 
   return {
     status: "ok",
@@ -968,7 +1057,9 @@ async function fetchOpenMarketAsset(input, apiKey) {
       return [name, data];
     })
   );
-  return { status: "ok", observedAt: new Date().toISOString(), data: Object.fromEntries(values) };
+  const data = Object.fromEntries(values);
+  if (!Object.values(data).some(payloadHasObservations)) throw new Error(`OpenMarket returned no current observations for ${symbol}USDT.`);
+  return { status: "ok", observedAt: new Date().toISOString(), symbol, data };
 }
 
 async function getMarketOverview() {
@@ -1149,12 +1240,14 @@ function getAiProviders() {
   const openRouterKey = String(process.env.OPENROUTER_API_KEY || "").trim();
   const huggingFaceKey = String(process.env.HUGGINGFACE_API_KEY || process.env.HF_TOKEN || "").trim();
   if (openRouterKey) {
+    const models = [...new Set([OPENROUTER_MODEL, ...OPENROUTER_FALLBACK_MODELS])];
     providers.push({
       id: "openrouter",
       label: "OpenRouter",
       key: openRouterKey,
       baseUrl: OPENROUTER_API_BASE,
       model: OPENROUTER_MODEL,
+      models,
       webSearch: OPENROUTER_WEB_SEARCH,
     });
   }
@@ -1189,9 +1282,110 @@ function summarizeProviderStatus(data) {
 function directProviderSources(data) {
   const sources = [];
   if (data.coinmarketcap?.status === "ok") sources.push({ name: "CoinMarketCap API", url: "https://coinmarketcap.com/", type: "RAW_DATA", freshness: data.coinmarketcap.observedAt });
+  if (data.coinbase?.status === "ok") sources.push({ name: "Coinbase Exchange API", url: "https://exchange.coinbase.com/", type: "PRIMARY", freshness: data.coinbase.observedAt });
+  if (data.kraken?.status === "ok") sources.push({ name: "Kraken Market Data API", url: "https://www.kraken.com/", type: "PRIMARY", freshness: data.kraken.observedAt });
   if (data.coinalyze?.status === "ok") sources.push({ name: "Coinalyze API", url: "https://coinalyze.net/", type: "RAW_DATA", freshness: data.coinalyze.observedAt });
   if (data.openmarket?.status === "ok") sources.push({ name: "OpenMarket API", url: "https://openmarket.xyz/", type: "RAW_DATA", freshness: data.openmarket.observedAt });
   return sources;
+}
+
+function enrichVerifiedMarketData(safe, providerData, input) {
+  if (!["CRYPTO", "MEME"].includes(input.assetClass)) return { priceConflict: null };
+  const symbol = normalizeSymbol(input.asset);
+  const cmcRecord = extractCmcAsset(providerData.coinmarketcap?.data, symbol);
+  const cmcQuote = extractCmcUsdQuote(cmcRecord);
+  const coinbase = providerData.coinbase?.status === "ok" ? providerData.coinbase.data : null;
+  const kraken = providerData.kraken?.status === "ok" ? providerData.kraken.data : null;
+  const coinbasePrice = numericOrNull(coinbase?.ticker?.price);
+  const krakenPrice = numericOrNull(kraken?.ticker?.c?.[0]);
+  const cmcPrice = numericOrNull(cmcQuote?.price);
+  const directPrices = [coinbasePrice, krakenPrice].filter(Number.isFinite);
+  const preferredPrice = coinbasePrice ?? krakenPrice ?? cmcPrice;
+
+  if (preferredPrice !== null) safe.marketData.price = formatUsd(preferredPrice);
+  if (numericOrNull(cmcQuote?.percent_change_24h ?? cmcQuote?.percentChange24h) !== null) {
+    safe.marketData.change24h = formatPercent(cmcQuote.percent_change_24h ?? cmcQuote.percentChange24h);
+  } else {
+    const change = deriveCandleChange(coinbase?.candles, 24, "coinbase") ?? deriveCandleChange(kraken?.candles, 24, "kraken");
+    if (change !== null) safe.marketData.change24h = formatPercent(change);
+  }
+  const volumeUsd = numericOrNull(cmcQuote?.volume_24h ?? cmcQuote?.volume24h);
+  if (volumeUsd !== null) safe.marketData.volume24h = formatUsdCompact(volumeUsd);
+  else if (numericOrNull(coinbase?.ticker?.volume) !== null) safe.marketData.volume24h = `${formatCompactNumber(Number(coinbase.ticker.volume))} ${symbol}`;
+  const marketCap = numericOrNull(cmcQuote?.market_cap ?? cmcQuote?.marketCap);
+  const fdv = numericOrNull(cmcQuote?.fully_diluted_market_cap ?? cmcQuote?.fullyDilutedMarketCap);
+  if (marketCap !== null) safe.marketData.marketCap = formatUsdCompact(marketCap);
+  if (fdv !== null) safe.marketData.fdv = formatUsdCompact(fdv);
+
+  const bid = numericOrNull(coinbase?.ticker?.bid ?? coinbase?.book?.bids?.[0]?.[0]);
+  const ask = numericOrNull(coinbase?.ticker?.ask ?? coinbase?.book?.asks?.[0]?.[0]);
+  if (bid !== null && ask !== null && ask >= bid && preferredPrice) {
+    const spreadPct = ((ask - bid) / preferredPrice) * 100;
+    safe.marketData.liquidity = `Coinbase spread ${spreadPct.toFixed(spreadPct < 0.01 ? 3 : 2)}%`;
+  }
+
+  const timeframes = buildVerifiedTimeframes(coinbase?.candles, kraken?.candles, symbol);
+  if (timeframes.length) safe.marketData.timeframes = timeframes;
+  if (directPrices.length) safe.dataQuality.freshness = `Direct exchange data · ${new Date().toISOString()}`;
+
+  let priceConflict = null;
+  if (directPrices.length >= 2) {
+    const low = Math.min(...directPrices);
+    const high = Math.max(...directPrices);
+    const midpoint = (low + high) / 2;
+    const divergence = midpoint > 0 ? ((high - low) / midpoint) * 100 : 0;
+    if (divergence > 1.5) priceConflict = `Coinbase/Kraken price divergence is ${divergence.toFixed(2)}%.`;
+  }
+  return { priceConflict };
+}
+
+function buildVerifiedTimeframes(coinbaseCandles, krakenCandles, symbol) {
+  const source = Array.isArray(coinbaseCandles) && coinbaseCandles.length
+    ? { rows: coinbaseCandles, kind: "coinbase" }
+    : Array.isArray(krakenCandles) && krakenCandles.length
+      ? { rows: krakenCandles, kind: "kraken" }
+      : null;
+  if (!source) return [];
+  return [1, 6, 24].map((hours) => {
+    const change = deriveCandleChange(source.rows, hours, source.kind);
+    const volume = deriveCandleVolume(source.rows, hours, source.kind);
+    if (change === null && volume === null) return null;
+    return {
+      period: `${hours}H`,
+      priceChange: change === null ? null : formatPercent(change),
+      volume: volume === null ? null : `${formatCompactNumber(volume)} ${symbol}`,
+      buyers: null,
+      sellers: null,
+      buyVolume: null,
+      sellVolume: null,
+    };
+  }).filter(Boolean);
+}
+
+function normalizedCandles(rows, kind) {
+  if (!Array.isArray(rows)) return [];
+  return rows.map((row) => {
+    if (!Array.isArray(row)) return null;
+    if (kind === "coinbase") return { time: Number(row[0]), open: Number(row[3]), close: Number(row[4]), volume: Number(row[5]) };
+    return { time: Number(row[0]), open: Number(row[1]), close: Number(row[4]), volume: Number(row[6]) };
+  }).filter((row) => row && Number.isFinite(row.time) && Number.isFinite(row.open) && Number.isFinite(row.close)).sort((a, b) => a.time - b.time);
+}
+
+function deriveCandleChange(rows, hours, kind) {
+  const candles = normalizedCandles(rows, kind);
+  if (candles.length < 2) return null;
+  const recent = candles.at(-1);
+  const cutoff = recent.time - hours * 3600;
+  const start = candles.find((row) => row.time >= cutoff) || candles[0];
+  return start.open > 0 ? ((recent.close - start.open) / start.open) * 100 : null;
+}
+
+function deriveCandleVolume(rows, hours, kind) {
+  const candles = normalizedCandles(rows, kind);
+  if (!candles.length) return null;
+  const cutoff = candles.at(-1).time - hours * 3600;
+  const values = candles.filter((row) => row.time >= cutoff).map((row) => row.volume).filter(Number.isFinite);
+  return values.length ? values.reduce((sum, value) => sum + value, 0) : null;
 }
 
 function mergeAndSanitizeSources(modelSources, annotations, providerSources, sourceMode) {
@@ -1264,8 +1458,98 @@ function sanitizeSourceUrl(value, allowedDomains) {
   }
 }
 
+function sourceHostMatches(value, domain) {
+  try {
+    const host = new URL(value).hostname.toLowerCase();
+    return host === domain || host.endsWith(`.${domain}`);
+  } catch {
+    return false;
+  }
+}
+
 function normalizeSymbol(value) {
-  return String(value).trim().toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 20);
+  const aliases = new Map([
+    ["BITCOIN", "BTC"], ["XBT", "BTC"], ["ETHEREUM", "ETH"], ["ETHER", "ETH"],
+    ["SOLANA", "SOL"], ["RIPPLE", "XRP"], ["DOGECOIN", "DOGE"], ["CARDANO", "ADA"],
+  ]);
+  const quoteAssets = ["USDT", "USDC", "BUSD", "FDUSD", "TUSD", "USD", "EUR", "GBP", "JPY", "BTC", "ETH"];
+  let raw = String(value || "").trim().toUpperCase();
+  if (!raw) return "";
+  if (raw.includes(":")) raw = raw.split(":").at(-1);
+  raw = raw.replace(/(?:\.P|[-_/]?PERP(?:ETUAL)?)$/i, "");
+  const parts = raw.split(/[-_/\s]+/).filter(Boolean);
+  let symbol = parts.length > 1 ? parts[0] : raw.replace(/[^A-Z0-9]/g, "");
+  if (parts.length === 1) {
+    for (const quote of quoteAssets) {
+      if (symbol.endsWith(quote) && symbol.length > quote.length + 1) {
+        symbol = symbol.slice(0, -quote.length);
+        break;
+      }
+    }
+  }
+  return (aliases.get(symbol) || symbol).slice(0, 20);
+}
+
+function extractCmcAsset(payload, symbol) {
+  const data = payload?.data;
+  if (!data) return null;
+  const candidates = [];
+  if (Array.isArray(data)) candidates.push(...data);
+  if (Array.isArray(data.cryptoCurrencyList)) candidates.push(...data.cryptoCurrencyList);
+  if (Array.isArray(data.crypto_currency_list)) candidates.push(...data.crypto_currency_list);
+  const keyed = data[symbol] ?? data[symbol?.toLowerCase?.()];
+  if (Array.isArray(keyed)) candidates.push(...keyed);
+  else if (keyed && typeof keyed === "object") candidates.push(keyed);
+  for (const value of Object.values(data)) {
+    if (Array.isArray(value)) candidates.push(...value.filter((item) => item && typeof item === "object"));
+    else if (value && typeof value === "object" && (value.symbol || value.slug || value.name)) candidates.push(value);
+  }
+  return candidates.find((item) => normalizeSymbol(item?.symbol || item?.slug || item?.name) === symbol) || candidates[0] || null;
+}
+
+function extractCmcUsdQuote(record) {
+  if (!record || typeof record !== "object") return null;
+  if (record.quote?.USD) return record.quote.USD;
+  const quotes = Array.isArray(record.quote) ? record.quote : Array.isArray(record.quotes) ? record.quotes : [];
+  return quotes.find((item) => String(item?.symbol || item?.name || "").toUpperCase() === "USD") || quotes[0] || null;
+}
+
+function firstKrakenResult(payload, ignored = new Set()) {
+  if (!payload?.result || typeof payload.result !== "object") return null;
+  const key = Object.keys(payload.result).find((name) => !ignored.has(name));
+  return key ? payload.result[key] : null;
+}
+
+function payloadHasObservations(value, depth = 0) {
+  if (depth > 5 || value === null || value === undefined) return false;
+  if (Array.isArray(value)) return value.length > 0 && value.some((item) => payloadHasObservations(item, depth + 1));
+  if (typeof value === "number") return Number.isFinite(value);
+  if (typeof value === "string") return value.trim().length > 0;
+  if (typeof value !== "object") return false;
+  return Object.entries(value).some(([key, item]) => !/^(status|message|error|timestamp|credit_count)$/i.test(key) && payloadHasObservations(item, depth + 1));
+}
+
+function formatUsd(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return null;
+  const digits = number >= 1000 ? 2 : number >= 1 ? 4 : 8;
+  return `$${number.toLocaleString("en-US", { maximumFractionDigits: digits })}`;
+}
+
+function formatUsdCompact(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? `$${formatCompactNumber(number)}` : null;
+}
+
+function formatCompactNumber(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return "—";
+  return new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 2 }).format(number);
+}
+
+function formatPercent(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? `${number >= 0 ? "+" : ""}${number.toFixed(2)}%` : null;
 }
 
 function looksLikeContract(value) {

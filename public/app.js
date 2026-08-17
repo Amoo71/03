@@ -782,8 +782,9 @@ function renderScannerResults(response, announce = false) {
   const alertHtml = alerts.length
     ? `<section class="scan-section"><div class="scan-section-title"><span>${escapeHtml(t("executableAlerts"))}</span><strong>${alerts.length}</strong></div><div class="alert-stack">${alerts.map(({ item, index }) => renderScanCard(item, index, true)).join("")}</div></section>`
     : `<article class="no-setup"><div class="no-setup-icon"><svg><use href="#i-shield"></use></svg></div><div><span class="terminal-line">SIGNAL_GATE://REJECTED</span><h2>${escapeHtml(t("noAASetup"))}</h2><p>${escapeHtml(t("noAASetupCopy"))}</p></div><strong>${escapeHtml(t("noTrade"))}</strong></article>`;
-  const candidatesHtml = analyses.length
-    ? analyses.map((item, index) => renderScanCard(item, index, false)).join("")
+  const researched = analyses.map((item, index) => ({ item, index })).filter(({ item }) => !item.analysis?.executable);
+  const candidatesHtml = researched.length
+    ? researched.map(({ item, index }) => renderScanCard(item, index, false)).join("")
     : `<div class="scanner-empty-line">${escapeHtml(response.discovery?.noSetupReason || t("noAASetup"))}</div>`;
 
   elements.scannerResults.innerHTML = `
@@ -792,7 +793,7 @@ function renderScannerResults(response, announce = false) {
       <div class="scan-stats"><span><small>${escapeHtml(t("candidates"))}</small><strong>${analyses.length}</strong></span><span><small>A / A+</small><strong>${alerts.length}</strong></span><span><small>UTC</small><strong>${escapeHtml(shortUtc(response.meta?.generatedAt).replace(" UTC", ""))}</strong></span></div>
     </header>
     ${alertHtml}
-    <section class="scan-section"><div class="scan-section-title"><span>${escapeHtml(t("researchedCandidates"))}</span><strong>${analyses.length}</strong></div><div class="candidate-stack">${candidatesHtml}</div></section>
+    <section class="scan-section"><div class="scan-section-title"><span>${escapeHtml(t("researchedCandidates"))}</span><strong>${researched.length}</strong></div><div class="candidate-stack">${candidatesHtml}</div></section>
     <footer class="scan-result-footer"><span><svg><use href="#i-shield"></use></svg>${escapeHtml(t("paperNoOrders"))}</span><span>${escapeHtml(response.meta?.durationMs ? `${Math.round(response.meta.durationMs / 1000)}s` : "—")}</span></footer>`;
   elements.globalTrendValue.textContent = String(trend).replaceAll("_", "-");
   elements.globalTrendValue.className = `metric-value ${trend === "RISK_ON" ? "positive" : trend === "RISK_OFF" ? "negative" : ""}`;
@@ -806,12 +807,40 @@ function renderScanCard(item, index, alert) {
   const a = item.analysis;
   const trade = a.trade || {};
   const risk = [...(a.redFlags || []), ...(a.hardVetoes || [])][0] || "—";
+  const diagnostic = !a.executable && ["INSUFFICIENT_DATA", "NO_TRADE"].includes(a.verdict);
+  if (diagnostic) {
+    const snapshot = a.marketData || {};
+    const blocks = [...(a.dataQuality?.limitations || []), ...(a.hardVetoes || []), ...(a.redFlags || [])]
+      .filter((value, position, values) => value && values.indexOf(value) === position)
+      .slice(0, 2);
+    const stateLabel = a.verdict === "INSUFFICIENT_DATA" ? (state.language === "de" ? "DATENLÜCKE" : "DATA GAP") : (state.language === "de" ? "ABGELEHNT" : "REJECTED");
+    const marketRows = [["PRICE", snapshot.price], ["24H", snapshot.change24h], ["VOL", snapshot.volume24h]]
+      .filter(([, value]) => value)
+      .map(([label, value]) => `<span><small>${label}</small><strong>${escapeHtml(value)}</strong></span>`).join("");
+    return `<article class="candidate-card diagnostic">
+      <div class="diagnostic-state"><strong>${stateLabel}</strong><small>${a.verdict === "NO_TRADE" ? `SCORE ${escapeHtml(a.score ?? 0)}/100` : (state.language === "de" ? "KEIN SIGNAL" : "NO SIGNAL")}</small></div>
+      <div class="candidate-main"><span class="terminal-line">${escapeHtml(a.assetClass || "OTHER")} · ${escapeHtml(a.direction || "WATCH")}</span><h3>${escapeHtml(a.asset || "—")} <small>${escapeHtml(a.assetName || "")}</small></h3><p>${escapeHtml(a.headline || "—")}</p><div class="diagnostic-blocks">${blocks.map((reason) => `<span>${escapeHtml(reason)}</span>`).join("")}</div></div>
+      <div class="diagnostic-evidence"><small>${state.language === "de" ? "DIREKTE MARKTDATEN" : "DIRECT MARKET DATA"}</small><div class="diagnostic-market">${marketRows || "<span><strong>—</strong></span>"}</div><div class="provider-health">${renderProviderHealth(item.providerStatus, a.assetClass)}</div></div>
+      <div class="candidate-risk"><small>${state.language === "de" ? "HAUPTBLOCKER" : "PRIMARY BLOCKER"}</small><p>${escapeHtml(risk)}</p><button class="ghost-button" data-scan-analysis="${index}"><span>${escapeHtml(t("openAnalyzer"))}</span><svg><use href="#i-arrow"></use></svg></button></div>
+    </article>`;
+  }
   return `<article class="candidate-card ${alert ? "alert" : ""}">
     <div class="candidate-score"><strong>${escapeHtml(a.score ?? 0)}</strong><small>/100</small><span>${escapeHtml(String(a.verdict || "NO_TRADE").replaceAll("_", " "))}</span></div>
     <div class="candidate-main"><span class="terminal-line">${escapeHtml(a.assetClass || "OTHER")} · ${escapeHtml(a.direction || "WATCH")}</span><h3>${escapeHtml(a.asset || "—")} <small>${escapeHtml(a.assetName || "")}</small></h3><p>${escapeHtml(a.headline || "—")}</p><div class="candidate-why">${(a.why || []).slice(0, 3).map((reason) => `<span>${escapeHtml(reason)}</span>`).join("")}</div></div>
-    <div class="candidate-levels"><span><small>${escapeHtml(t("trigger"))}</small><strong>${escapeHtml(trade.trigger || "—")}</strong></span><span><small>${escapeHtml(t("stop"))}</small><strong>${escapeHtml(trade.stop || "—")}</strong></span><span><small>${escapeHtml(t("target"))}</small><strong>${escapeHtml(trade.target || "—")}</strong></span><span><small>${escapeHtml(t("rr"))}</small><strong>${Number.isFinite(Number(trade.rr)) ? `${Number(trade.rr).toFixed(2)}:1` : "—"}</strong></span></div>
+    <div class="candidate-levels"><span><small>${escapeHtml(t("trigger"))}</small><strong>${escapeHtml(trade.trigger || "—")}</strong></span><span><small>${escapeHtml(t("stop"))}</small><strong>${escapeHtml(trade.stop || "—")}</strong></span><span><small>${escapeHtml(t("target"))}</small><strong>${escapeHtml(trade.target || "—")}</strong></span><span><small>${escapeHtml(t("rr"))}</small><strong>${trade.rr !== null && trade.rr !== "" && Number.isFinite(Number(trade.rr)) ? `${Number(trade.rr).toFixed(2)}:1` : "—"}</strong></span></div>
     <div class="candidate-risk"><small>RED FLAG</small><p>${escapeHtml(risk)}</p><button class="ghost-button" data-scan-analysis="${index}"><span>${escapeHtml(t("openAnalyzer"))}</span><svg><use href="#i-arrow"></use></svg></button></div>
   </article>`;
+}
+
+function renderProviderHealth(providerStatus = {}, assetClass = "OTHER") {
+  const crypto = ["CRYPTO", "MEME"].includes(assetClass);
+  const labels = { coinmarketcap: "CMC", coinbase: "COINBASE", kraken: "KRAKEN", coinalyze: "COINALYZE", openmarket: "OPENMARKET", arkham: "ARKHAM" };
+  return Object.entries(labels).filter(([key]) => crypto || key === "arkham").map(([key, label]) => {
+    const value = providerStatus?.[key] || {};
+    const status = value.status === "ok" ? "LIVE" : value.status === "web_search" ? "WEB" : state.language === "de" ? "FEHLT" : "MISS";
+    const className = value.status === "ok" ? "live" : value.status === "web_search" ? "web" : "miss";
+    return `<span class="source-chip ${className}" title="${escapeAttr(value.note || `${label} ${status}`)}"><i></i>${label}<b>${status}</b></span>`;
+  }).join("");
 }
 
 function renderMasterError(error) {
@@ -826,7 +855,7 @@ function openScanAnalysis(index) {
   const item = state.currentScan?.analyses?.[index];
   if (!item?.analysis) return;
   state.currentAnalysis = item.analysis;
-  state.currentMeta = item.meta || state.currentScan.meta;
+  state.currentMeta = { ...(item.meta || state.currentScan.meta), providerStatus: item.providerStatus || {} };
   renderAnalysis(item.analysis, state.currentMeta, false);
   navigate("analyzer");
 }
@@ -1026,6 +1055,7 @@ function renderAnalysis(analysis, meta, announce = false) {
   const trade = analysis.trade || {};
   const sources = Array.isArray(analysis.sources) ? analysis.sources : [];
   const breakdown = analysis.scoreBreakdown || {};
+  const providerHealth = renderProviderHealth(meta?.providerStatus || {}, analysis.assetClass);
 
   const level = (label, value, className = "") => `<div class="level-card ${className}"><span>${escapeHtml(label)}</span><strong title="${escapeAttr(value || "—")}">${escapeHtml(value || "—")}</strong></div>`;
   const reasonsHtml = (analysis.why || []).length ? analysis.why.map((reason) => `<li>${escapeHtml(reason)}</li>`).join("") : `<li>—</li>`;
@@ -1059,10 +1089,22 @@ function renderAnalysis(analysis, meta, announce = false) {
     ["DEPLOYER", meme.deployerHistory], ["SNIPERS / BUNDLES", meme.sniperBundledRisk], ["WALLET CLUSTERS", meme.walletClusters],
     ["MANIPULATION", meme.manipulationRisk], ["NARRATIVE", meme.socialNarrative],
   ].map(([label, value]) => `<div><span>${label}</span><strong>${escapeHtml(value || "—")}</strong></div>`).join("");
+  const tradeLevelsHtml = insufficient
+    ? `<div class="analysis-gate"><div><span class="terminal-line">DATA_GATE://BLOCKED</span><strong>${escapeHtml(state.language === "de" ? "Kein Entry aus unvollständigen Daten" : "No entry from incomplete data")}</strong><p>${escapeHtml(state.language === "de" ? "Trigger, Stop und Ziel werden erst angezeigt, wenn Preis-, Signal- und Ausführungsdaten verifiziert sind." : "Trigger, stop and target appear only after price, signal and execution data are verified.")}</p></div><div class="provider-health">${providerHealth}</div></div>`
+    : `<div class="trade-levels">
+      ${level(t("direction"), analysis.direction || "NONE")}
+      ${level(t("trigger"), trade.trigger)}
+      ${level(t("entry"), trade.entry, "entry")}
+      ${level(t("stop"), trade.stop, "stop")}
+      ${level(t("target"), trade.target, "target")}
+      ${level(t("rr"), trade.rr !== null && trade.rr !== "" && Number.isFinite(Number(trade.rr)) ? `${Number(trade.rr).toFixed(2)} : 1` : null)}
+      ${level(t("risk"), trade.risk || "UNKNOWN")}
+      ${level(t("etoro"), analysis.etoro?.status || "UNCONFIRMED")}
+    </div>`;
 
   elements.analysisResult.innerHTML = `
     <div class="result-header">
-      <div class="score-orb" style="--score:${score};--score-color:${scoreColor}"><span>${score}<small>SCORE / 100</small></span></div>
+      <div class="score-orb" style="--score:${score};--score-color:${scoreColor}"><span>${insufficient ? "—" : score}<small>${insufficient ? "DATA GATE" : "SCORE / 100"}</small></span></div>
       <div class="result-title">
         <span class="terminal-line">${escapeHtml(t("latestLiveDecision"))} · ${escapeHtml(analysis.assetClass || "OTHER")}</span>
         <h2>${escapeHtml(analysis.asset || "—")} <span class="muted">${escapeHtml(analysis.assetName || "")}</span></h2>
@@ -1070,16 +1112,7 @@ function renderAnalysis(analysis, meta, announce = false) {
       </div>
       <div class="verdict-badge ${good ? "good" : insufficient ? "bad" : ""}">${escapeHtml(verdict.replaceAll("_", " "))}</div>
     </div>
-    <div class="trade-levels">
-      ${level(t("direction"), analysis.direction || "NONE")}
-      ${level(t("trigger"), trade.trigger)}
-      ${level(t("entry"), trade.entry, "entry")}
-      ${level(t("stop"), trade.stop, "stop")}
-      ${level(t("target"), trade.target, "target")}
-      ${level(t("rr"), Number.isFinite(Number(trade.rr)) ? `${Number(trade.rr).toFixed(2)} : 1` : null)}
-      ${level(t("risk"), trade.risk || "UNKNOWN")}
-      ${level(t("etoro"), analysis.etoro?.status || "UNCONFIRMED")}
-    </div>
+    ${tradeLevelsHtml}
     <div class="result-grid">
       <section class="result-panel"><h3>${escapeHtml(t("why"))}</h3><ul class="reason-list">${reasonsHtml}</ul></section>
       <section class="result-panel"><h3>${escapeHtml(t("risksVetoes"))}</h3><ul class="risk-list">${risksHtml}</ul></section>

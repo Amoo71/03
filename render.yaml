@@ -13,10 +13,12 @@ services:
         value: openrouter
       - key: OPENROUTER_MODEL
         value: openrouter/free
+      - key: OPENROUTER_FALLBACK_MODELS
+        value: openrouter/free
       - key: OPENROUTER_WEB_SEARCH
         value: "true"
       - key: HUGGINGFACE_MODEL
-        value: openai/gpt-oss-120b
+        value: openai/gpt-oss-120b:fastest
       - key: OPENROUTER_API_KEY
         sync: false
       - key: HUGGINGFACE_API_KEY

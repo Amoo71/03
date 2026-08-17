@@ -8,6 +8,8 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 let openRouterFailuresRemaining = 1;
+let openRouterModelsObserved = false;
+const requestedCmcSymbols = [];
 const mock = http.createServer(async (req, res) => {
   if (req.method === "POST" && req.url?.endsWith("/chat/completions")) {
     if (req.url.startsWith("/openrouter/") && openRouterFailuresRemaining > 0) {
@@ -15,17 +17,46 @@ const mock = http.createServer(async (req, res) => {
       return json(res, 429, { error: { message: "test rate limit" } });
     }
     const body = JSON.parse(await readBody(req));
+    if (req.url.startsWith("/openrouter/") && Array.isArray(body.models)) openRouterModelsObserved = body.models.includes("openrouter/free-backup");
     const name = body?.response_format?.json_schema?.name;
-    const result = name === "candidate_discovery" ? discoveryFixture() : name === "paper_trade_evaluation" ? evaluationFixture() : analysisFixture();
+    const prompt = body?.messages?.map((message) => message.content).join("\n") || "";
+    const result = name === "candidate_discovery" ? discoveryFixture() : name === "paper_trade_evaluation" ? evaluationFixture() : prompt.includes('"asset":"BTC-USD"') ? cryptoAnalysisFixture() : analysisFixture();
     return json(res, 200, {
       id: `chat_${name}`,
       model: req.url.startsWith("/hf/") ? "openai/gpt-oss-120b" : "openrouter/free-test",
       choices: [{ message: {
         role: "assistant",
         content: JSON.stringify(result),
-        annotations: [{ type: "url_citation", url_citation: { title: "SEC filing", url: "https://www.sec.gov/Archives/test" } }],
+        annotations: [
+          { type: "url_citation", url_citation: { title: "SEC filing", url: "https://www.sec.gov/Archives/test" } },
+          { type: "url_citation", url_citation: { title: "eToro market", url: "https://www.etoro.com/markets/test" } },
+        ],
       } }],
     });
+  }
+  if (req.url?.includes("/cryptocurrency/quotes/latest")) {
+    const requestUrl = new URL(req.url, "http://mock.local");
+    const symbol = requestUrl.searchParams.get("symbol");
+    requestedCmcSymbols.push(symbol);
+    if (symbol !== "BTC") return json(res, 200, { data: {} });
+    return json(res, 200, { data: { BTC: [{ symbol: "BTC", name: "Bitcoin", quote: { USD: { price: 100000, percent_change_24h: 1.25, volume_24h: 50_000_000_000, market_cap: 2_000_000_000_000, fully_diluted_market_cap: 2_100_000_000_000 } } }] } });
+  }
+  if (req.url?.startsWith("/coinbase/products/BTC-USD/ticker")) {
+    return json(res, 200, { price: "100000", bid: "99995", ask: "100005", volume: "25000", time: new Date().toISOString() });
+  }
+  if (req.url?.startsWith("/coinbase/products/BTC-USD/candles")) {
+    const now = Math.floor(Date.now() / 3_600_000) * 3_600;
+    return json(res, 200, Array.from({ length: 30 }, (_, index) => [now - index * 3600, 98_000 + index, 100_100, 98_500, 100_000 - index * 20, 900 + index]));
+  }
+  if (req.url?.startsWith("/coinbase/products/BTC-USD/book")) {
+    return json(res, 200, { sequence: 1, bids: [["99995", "1.2", 3]], asks: [["100005", "1.1", 2]] });
+  }
+  if (req.url?.startsWith("/kraken/0/public/Ticker")) {
+    return json(res, 200, { error: [], result: { XXBTZUSD: { a: ["100006"], b: ["99994"], c: ["100001"], v: ["12000", "24000"] } } });
+  }
+  if (req.url?.startsWith("/kraken/0/public/OHLC")) {
+    const now = Math.floor(Date.now() / 3_600_000) * 3_600;
+    return json(res, 200, { error: [], result: { XXBTZUSD: Array.from({ length: 30 }, (_, index) => [now - (29 - index) * 3600, "98500", "100100", "98000", String(99_400 + index * 20), "99500", "800", 10]), last: now } });
   }
   if (req.url?.includes("/cryptocurrency/listings/latest")) {
     return json(res, 200, { data: [{ symbol: "BTC", name: "Bitcoin", quote: { USD: { price: 100000, percent_change_24h: 1.2, market_cap: 2_000_000_000_000 } } }] });
@@ -52,9 +83,12 @@ const app = spawn(process.execPath, ["server.mjs"], {
     OPENROUTER_API_BASE: `http://127.0.0.1:${mockPort}/openrouter`,
     HUGGINGFACE_API_BASE: `http://127.0.0.1:${mockPort}/hf`,
     OPENROUTER_MODEL: "openrouter/free",
+    OPENROUTER_FALLBACK_MODELS: "openrouter/free-backup",
     HUGGINGFACE_MODEL: "openai/gpt-oss-120b",
     CMC_PUBLIC_API_BASE: `http://127.0.0.1:${mockPort}`,
     CMC_PRO_API_BASE: `http://127.0.0.1:${mockPort}`,
+    COINBASE_EXCHANGE_API_BASE: `http://127.0.0.1:${mockPort}/coinbase`,
+    KRAKEN_API_BASE: `http://127.0.0.1:${mockPort}/kraken`,
   },
   stdio: ["ignore", "pipe", "pipe"],
 });
@@ -62,7 +96,7 @@ const app = spawn(process.execPath, ["server.mjs"], {
 try {
   await waitForHealth(appPort);
   const health = await api(appPort, "/api/health");
-  assert.equal(health.payload.version, "2.1.0");
+  assert.equal(health.payload.version, "2.2.0");
   const config = await api(appPort, "/api/config");
   assert.equal(config.payload.analyzer.ready, true);
   assert.equal(config.payload.analyzer.primary, "openrouter");
@@ -94,6 +128,20 @@ try {
   assert.equal(direct.payload.analysis.trade.rr, 2);
   assert.equal(direct.payload.meta.provider, "openrouter");
   assert.equal(direct.payload.meta.webResearch, true);
+  assert.equal(openRouterModelsObserved, true, "OpenRouter model fallback routing must be enabled when configured");
+
+  const crypto = await api(appPort, "/api/analyze", {
+    method: "POST",
+    body: { asset: "BTC-USD", assetClass: "CRYPTO", language: "de", sourceMode: "EXTENDED", horizon: "SWING" },
+  });
+  assert.equal(crypto.status, 200);
+  assert.equal(requestedCmcSymbols.at(-1), "BTC", "BTC-USD must resolve to the BTC base asset");
+  assert.equal(crypto.payload.providerStatus.coinmarketcap.status, "ok");
+  assert.equal(crypto.payload.providerStatus.coinbase.status, "ok");
+  assert.equal(crypto.payload.providerStatus.kraken.status, "ok");
+  assert.equal(crypto.payload.analysis.marketData.price, "$100,000");
+  assert.equal(crypto.payload.analysis.marketData.change24h, "+1.25%");
+  assert.equal(crypto.payload.analysis.executable, false, "direct prices alone must never create a signal");
 
   const scan = await api(appPort, "/api/scan", {
     method: "POST",
@@ -137,6 +185,8 @@ async function validateFrontendContracts() {
     assert.ok(html.includes(`data-view="${view}"`), `missing ${view} view`);
   }
   assert.equal((html.match(/class="mobile-icon"/g) || []).length, 5, "every mobile tab needs an icon");
+  assert.match(js, /candidate-card diagnostic/, "insufficient-data candidates need a compact diagnostic state");
+  assert.match(js, /provider-health/, "provider health must be visible in the result UI");
   const selectorIds = [...js.matchAll(/querySelector\(["']#([A-Za-z][\w-]*)["']\)/g)].map((match) => match[1]);
   for (const id of selectorIds) assert.ok(ids.includes(id), `JavaScript binds missing #${id}`);
   const translationKeys = [...html.matchAll(/data-i18n(?:-html)?="([A-Za-z][\w]*)"/g)].map((match) => match[1]);
@@ -210,6 +260,31 @@ function analysisFixture() {
       { name: "SEC", url: "https://www.sec.gov/Archives/test", type: "PRIMARY", freshness: "Current" },
       { name: "eToro", url: "https://www.etoro.com/markets/test", type: "RAW_DATA", freshness: "Current" },
     ],
+  };
+}
+
+function cryptoAnalysisFixture() {
+  const fixture = analysisFixture();
+  return {
+    ...fixture,
+    asset: "BTC-USD",
+    assetName: "Bitcoin",
+    assetClass: "CRYPTO",
+    headline: "Market data available; no independently confirmed trade setup.",
+    score: 0,
+    verdict: "INSUFFICIENT_DATA",
+    direction: "NONE",
+    confidence: "LOW",
+    etoro: { status: "UNCONFIRMED", instrument: null, buyAvailable: null, sellAvailable: null, costNotes: "Not verified." },
+    trade: { trigger: null, entry: null, stop: null, target: null, rr: null, risk: "UNKNOWN", invalidation: "" },
+    why: ["No independent setup confirmation"],
+    confirmations: [],
+    redFlags: ["Execution is not verified"],
+    hardVetoes: [],
+    scoreBreakdown: { catalyst: 0, technical: 0, derivatives: 0, smartMoney: 0, execution: 0, traderConsensus: 0, riskReward: 0, dataQuality: 0 },
+    marketData: { price: null, change24h: null, volume24h: null, marketCap: null, fdv: null, liquidity: null, openInterest: null, fundingRate: null, liquidations24h: null, timeframes: [] },
+    dataQuality: { freshness: "Unknown", sourcesChecked: 0, conflicts: [], limitations: ["No derivatives confirmation"] },
+    sources: [],
   };
 }
 

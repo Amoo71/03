@@ -1,4 +1,4 @@
-# J.A.R.V.I.S TradeAnalyzer v2.1 Master
+# J.A.R.V.I.S TradeAnalyzer v2.2 Master
 
 A responsive dark CLI-style research terminal for current multi-market discovery, conservative deep analysis and forward-test paper trading.
 
@@ -28,10 +28,13 @@ Render's free web service can sleep after inactivity. The paper-trading journal 
 ## Server-side AI providers
 
 - `OPENROUTER_API_KEY` — preferred provider. The default model is the zero-cost `openrouter/free` router.
-- `HUGGINGFACE_API_KEY` — automatic fallback. `HF_TOKEN` is also accepted. The default model is `openai/gpt-oss-120b`.
+- `HUGGINGFACE_API_KEY` — automatic fallback. `HF_TOKEN` is also accepted. The default model is `openai/gpt-oss-120b:fastest`, letting Hugging Face select a currently available fast inference provider.
 - `AI_PROVIDER` — optional priority override: `openrouter` (default) or `huggingface`.
 - `OPENROUTER_MODEL` / `HUGGINGFACE_MODEL` — optional model overrides.
+- `OPENROUTER_FALLBACK_MODELS` — optional comma-separated model fallbacks. OpenRouter tries them in order when the primary model is unavailable or rate-limited.
 - `OPENROUTER_WEB_SEARCH` — `true` by default for current, domain-restricted research.
+
+Claude is available through OpenRouter, not through Hugging Face. To use it, set `OPENROUTER_MODEL=~anthropic/claude-sonnet-latest` in Render and keep `OPENROUTER_FALLBACK_MODELS=openrouter/free`. Claude usage can be paid and is never presented as free. The default remains the free OpenRouter router with Hugging Face fallback.
 
 If OpenRouter is rate-limited or unavailable, a request automatically retries through Hugging Face. Hugging Face fallback has no attached web-search tool and may use only the direct server data; the hard-veto layer therefore returns insufficient data instead of inventing current facts.
 
@@ -45,6 +48,8 @@ Optional direct adapters:
 - `COINALYZE_API_KEY` — open interest, current/predicted funding and futures context.
 - `OPENMARKET_API_KEY` — Kiyotaka/OpenMarket orderflow, funding, liquidations and market points.
 
+Coinbase Exchange and Kraken public market-data APIs require no key and are always queried for supported crypto assets. They provide direct ticker/candle data and top-of-book coverage. The server normalizes pair forms such as `BTC-USD`, `BTC/USD`, `BTCUSDT` and `XBTUSD`, reconciles exchange prices, replaces model estimates with verified raw values and hard-vetoes material cross-exchange conflicts.
+
 Arkham public intelligence is queried through the domain-restricted OpenRouter web-research step when enabled. The app does not invent a private or undocumented Arkham API.
 
 ## Master Scanner
@@ -55,6 +60,8 @@ The global scanner is deliberately two-stage:
 2. **Deep analysis:** each candidate receives the full score matrix, fresh provider checks, eToro Germany execution check, reward/risk calculation and deterministic hard-veto enforcement.
 
 It supports global, crypto, meme-coin, equities and macro scopes. The Morning Brief preset deep-checks up to five candidates. A result reaches the alert feed only if it is executable, scores at least 82, has sufficient independent confirmations, passes eToro checks, has a clear invalidation and has a server-recalculated reward/risk of at least 2:1.
+
+Only URLs actually returned as web-search citations plus direct server-provider sources are accepted into the final evidence list. Model-written source links are discarded. eToro Germany cannot be marked confirmed without a retrieved eToro citation.
 
 Meme-coin deep analysis includes contract/chain identity, token age and supply, holder concentration, liquidity and exit liquidity, LP state, mint/freeze controls, honeypot/taxes, deployer history, snipers/bundles, wallet clusters, manipulation and narrative context. A critical unresolved item is a hard veto.
 
